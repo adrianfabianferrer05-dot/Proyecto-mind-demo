@@ -1,372 +1,92 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#2a2018" />
-  <title>Bar Cinca · Demo</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
-  <style>
-    :root{
-      --bg:#faf6ef; --paper:#fff; --ink:#241b16; --muted:#766a60;
-      --line:#eadfce; --wine:#7a2233; --wood:#2a2018; --gold:#a87924;
-      --green:#58704a; --red:#b4432e; --soft-red:#f8e9e6; --soft-gold:#f7eedb;
-      --soft-green:#edf2e8;
-    }
-    *{box-sizing:border-box}
-    html{scroll-behavior:smooth}
-    body{margin:0;background:var(--bg);color:var(--ink);font-family:"DM Sans",system-ui,sans-serif}
-    button,input,textarea{font:inherit}
-    button{cursor:pointer}
-    .app{min-height:100vh}
-    .topbar{
-      height:58px;background:var(--wood);color:white;display:flex;align-items:center;
-      justify-content:space-between;padding:0 16px;position:sticky;top:0;z-index:50;
-      border-bottom:1px solid rgba(255,255,255,.08)
-    }
-    .brand{display:flex;align-items:center;gap:10px}
-    .mark{width:26px;height:26px;border:1px solid #a99b8d;border-radius:8px;display:grid;place-items:center;font-family:"Playfair Display";font-size:14px}
-    .brand small{display:block;color:#bcae9f;font-size:10px;letter-spacing:.09em;text-transform:uppercase}
-    .brand strong{font-size:13px;font-weight:600}
-    .menuBtn{background:transparent;border:0;color:#fff;font-size:22px;padding:6px 8px}
-    .layout{display:flex}
-    aside{width:230px;background:var(--wood);min-height:calc(100vh - 58px);padding:18px 12px;position:sticky;top:58px;align-self:flex-start;display:none}
-    aside button,.drawer button{width:100%;border:0;background:transparent;color:#c8b9aa;border-radius:11px;padding:10px 12px;text-align:left;margin-bottom:3px}
-    aside button.active,.drawer button.active{background:#3b2f26;color:#fff}
-    main{width:100%;max-width:1180px;margin:auto;padding:24px 16px 70px}
-    .hero{margin:8px 0 22px}
-    .eyebrow{text-transform:uppercase;letter-spacing:.12em;font-size:10px;font-weight:700;color:#9d8e80}
-    h1,h2,h3,p{margin-top:0}
-    .hero h1{font-family:"Playfair Display",serif;font-size:38px;line-height:1.03;font-weight:500;letter-spacing:-.03em;margin:8px 0 10px}
-    .hero p{color:var(--muted);font-size:14px}
-    .grid4{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-    .card{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:17px;box-shadow:0 9px 25px -22px rgba(36,27,22,.35)}
-    .metric .value{font-family:"Playfair Display";font-size:29px;line-height:1;margin:8px 0 5px}
-    .metric .sub{font-size:11px;color:var(--muted)}
-    .delta{color:var(--green);font-weight:700}
-    .section{margin-top:26px}
-    .sectionHead{display:flex;align-items:end;justify-content:space-between;gap:10px;margin-bottom:11px}
-    .sectionHead h2{font-family:"Playfair Display";font-size:25px;font-weight:500;margin:0}
-    .sectionHead p{font-size:12px;color:var(--muted);margin:3px 0 0}
-    .chart{height:145px;display:flex;align-items:end;gap:5px;padding-top:16px}
-    .bar{flex:1;background:linear-gradient(to top,var(--wine),#b16977);border-radius:6px 6px 2px 2px;opacity:.88;min-width:5px}
-    .insights{display:grid;gap:10px}
-    .insight{display:grid;grid-template-columns:5px 1fr;gap:12px}
-    .stripe{border-radius:5px;background:var(--wine)}
-    .insight.problem .stripe{background:var(--red)}
-    .insight.opportunity .stripe{background:var(--gold)}
-    .insight .kind{font-size:10px;text-transform:uppercase;letter-spacing:.1em;font-weight:800;color:#9a8b7d}
-    .insight h3{font-size:16px;margin:4px 0 5px}
-    .insight p{font-size:12px;line-height:1.5;color:var(--muted);margin-bottom:7px}
-    .impact{font-weight:700;font-size:12px;margin:0 0 8px}
-    .textBtn{border:0;background:none;color:var(--wine);padding:0;font-size:12px;font-weight:700}
-    .prediction .big{font-family:"Playfair Display";font-size:34px;margin:4px 0 5px}
-    .confidence{display:inline-block;background:var(--soft-green);color:var(--green);padding:5px 8px;border-radius:999px;font-size:11px;font-weight:700}
-    .ask{background:var(--wood);color:#fff;border-color:var(--wood)}
-    .ask h2{font-family:"Playfair Display";font-weight:500;font-size:26px}
-    .ask p{color:#d4c8bb;font-size:12px}
-    .askRow{display:flex;gap:8px;margin-top:14px}
-    .askRow input{flex:1;border:1px solid #4f4136;background:#342920;color:#fff;border-radius:12px;padding:12px;min-width:0}
-    .askRow button,.primary{border:0;background:var(--wine);color:#fff;border-radius:12px;padding:11px 14px;font-weight:700}
-    .chips{display:flex;gap:7px;overflow:auto;padding-bottom:3px;margin-top:10px}
-    .chip{white-space:nowrap;background:#3b2f26;border:1px solid #514337;color:#d9cec4;border-radius:999px;padding:7px 9px;font-size:11px}
-    .tableWrap{overflow:auto;border:1px solid var(--line);border-radius:16px;background:#fff}
-    table{width:100%;border-collapse:collapse;min-width:650px}
-    th,td{padding:13px 14px;border-bottom:1px solid #f0e8dc;text-align:left;font-size:12px}
-    th{font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:#8d7f72}
-    .pill{display:inline-block;border-radius:999px;padding:5px 8px;font-size:10px;font-weight:700}
-    .critical{background:var(--soft-red);color:var(--red)}
-    .warn{background:var(--soft-gold);color:#7e5c18}
-    .ok{background:var(--soft-green);color:var(--green)}
-    .page{display:none}
-    .page.active{display:block}
-    .two{display:grid;gap:12px}
-    .recipeGrid{display:grid;grid-template-columns:1fr auto;gap:8px 18px;font-size:12px}
-    .priceHistory{display:grid;gap:9px;margin-top:12px}
-    .priceLine{display:flex;justify-content:space-between;border-bottom:1px dashed #e7dccb;padding-bottom:7px;font-size:12px}
-    .invoiceBox{border:1.5px dashed #d6c7b5;border-radius:18px;padding:22px;text-align:center;background:#fff}
-    .camera{font-size:36px;margin-bottom:8px}
-    .timeline{display:grid;gap:10px}
-    .timeline .item{display:flex;gap:11px}
-    .dot{width:10px;height:10px;background:var(--wine);border-radius:50%;margin-top:5px;flex:none}
-    .progress{height:9px;background:#eee6da;border-radius:999px;overflow:hidden}
-    .progress>div{height:100%;background:var(--wine);border-radius:999px}
-    .drawerBg{position:fixed;inset:0;background:rgba(36,27,22,.55);z-index:80;display:none}
-    .drawerBg.open{display:block}
-    .drawer{position:absolute;right:0;top:0;height:100%;width:min(83vw,320px);background:var(--wood);padding:18px}
-    .drawerTop{display:flex;justify-content:space-between;align-items:center;color:white;margin-bottom:16px}
-    .modalBg{position:fixed;inset:0;background:rgba(36,27,22,.58);z-index:100;display:none;align-items:flex-end;justify-content:center}
-    .modalBg.open{display:flex}
-    .modal{width:100%;max-width:520px;background:var(--bg);border-radius:22px 22px 0 0;padding:20px;max-height:88vh;overflow:auto}
-    .modalHead{display:flex;justify-content:space-between;gap:12px;align-items:center}
-    .x{border:0;background:#eee3d4;border-radius:999px;width:34px;height:34px}
-    .result{display:none;margin-top:14px}
-    .result.show{display:block}
-    .answer{background:#fff;border:1px solid #4a3d33;border-radius:13px;padding:13px;margin-top:10px;color:#e7ddd3;font-size:12px;line-height:1.55;background:#342920}
-    .footerNote{text-align:center;color:#9a8b7d;font-size:11px;margin-top:28px}
-    @media(min-width:900px){
-      aside{display:block}
-      .menuBtn{display:none}
-      main{padding:34px 30px 80px}
-      .grid4{grid-template-columns:repeat(4,1fr)}
-      .two{grid-template-columns:1fr 1fr}
-      .insights{grid-template-columns:1fr 1fr}
-      .hero h1{font-size:50px}
-      .modalBg{align-items:center;padding:20px}
-      .modal{border-radius:22px}
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#faf7f2">
+<title>Bar Cinca · Mobile</title>
+<style>
+:root{--bg:#faf7f2;--card:#fff;--ink:#171411;--muted:#756c63;--line:#e9e1d8;--wine:#7b2734;--gold:#a67922;--brown:#261b16}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.app{max-width:520px;margin:auto;min-height:100vh;padding:env(safe-area-inset-top) 18px calc(96px + env(safe-area-inset-bottom))}
+header{display:flex;align-items:center;justify-content:space-between;padding:18px 2px 14px;position:sticky;top:0;background:rgba(250,247,242,.94);backdrop-filter:blur(14px);z-index:3}
+.brand{display:flex;gap:10px;align-items:center}.mark{width:34px;height:34px;border:1px solid var(--ink);border-radius:9px;display:grid;place-items:center;font-family:Georgia,serif}.brand b{font-family:Georgia,serif;font-size:21px}
+.iconbtn{border:1px solid var(--line);background:#fff;border-radius:50%;width:42px;height:42px;font-size:20px}
+.eyebrow{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:16px}
+h1{font-family:Georgia,serif;font-size:37px;line-height:1.02;margin:8px 0 8px;font-weight:500}.sub{color:var(--muted);font-size:14px;margin-bottom:22px}
+.hero{background:var(--brown);color:#fff;border-radius:22px;padding:20px;margin-bottom:16px}.hero small{opacity:.7}.hero h2{font-family:Georgia,serif;font-size:26px;font-weight:500;margin:8px 0}.hero p{margin:0;opacity:.82;line-height:1.45}
+.sectionTitle{display:flex;align-items:end;justify-content:space-between;margin:24px 2px 12px}.sectionTitle h3{margin:0;font-size:18px}.sectionTitle span{font-size:13px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.metric{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;min-height:120px}.metric label{font-size:11px;font-weight:800;letter-spacing:.05em}.metric strong{font-family:Georgia,serif;font-size:28px;display:block;margin:10px 0 4px}.metric small{color:var(--muted)}
+.alert{background:#fff;border:1px solid var(--line);border-left:4px solid var(--wine);border-radius:18px;padding:16px;margin:10px 0}.pill{display:inline-block;background:#f7e8e2;color:#8c3d2d;border-radius:99px;padding:6px 9px;font-size:11px;font-weight:900;letter-spacing:.05em}.alert h4{font-size:19px;margin:12px 0 6px}.alert p{color:#514a44;margin:0 0 14px;line-height:1.45}.action{border:0;background:none;font-weight:800;font-size:15px;padding:0}
+.opportunity{border-left-color:var(--gold)}.opportunity .pill{background:#fbf2d9;color:#755817}
+.ask{background:#fff;border:1px solid var(--line);border-radius:20px;padding:16px}.ask b{display:block;margin-bottom:5px}.ask p{margin:0;color:var(--muted);font-size:14px}.quick{display:flex;gap:8px;overflow:auto;margin-top:14px;padding-bottom:2px}.chip{white-space:nowrap;border:1px solid var(--line);background:#fff;border-radius:99px;padding:9px 12px;font-size:13px}
+.bottom{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:min(520px,100%);background:rgba(255,255,255,.96);backdrop-filter:blur(16px);border-top:1px solid var(--line);padding:9px 14px calc(9px + env(safe-area-inset-bottom));display:grid;grid-template-columns:1fr 1fr 1.2fr 1fr 1fr;z-index:5}
+.nav{border:0;background:none;font-size:10px;color:#625a53;display:grid;gap:4px;place-items:center}.nav i{font-style:normal;font-size:21px}.nav.active{color:var(--wine);font-weight:800}.camera{margin-top:-26px}.camera i{width:54px;height:54px;border-radius:50%;background:var(--wine);color:#fff;display:grid;place-items:center;box-shadow:0 7px 20px #7b27343b;font-size:24px}.toast{display:none;position:fixed;bottom:105px;left:50%;transform:translateX(-50%);background:#171411;color:white;padding:12px 16px;border-radius:14px;font-size:13px;z-index:9;width:max-content;max-width:85%}
+.view{display:none}.view.active{display:block}.listcard{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px;margin:10px 0}.listcard strong{display:block}.listcard small{color:var(--muted)}
+.upload{border:1.5px dashed #cfc4b8;border-radius:20px;background:#fff;padding:28px 18px;text-align:center}.upload .big{font-size:34px}.primary{background:var(--wine);color:#fff;border:0;border-radius:14px;padding:13px 16px;font-weight:800;margin-top:12px}
+</style>
 </head>
 <body>
 <div class="app">
-  <header class="topbar">
-    <div class="brand">
-      <div class="mark">A</div>
-      <div><small>Plataforma</small><strong>Bar Cinca ▾</strong></div>
-    </div>
-    <button class="menuBtn" onclick="openDrawer()">☰</button>
-  </header>
+<header><div class="brand"><div class="mark">BC</div><b>Bar Cinca</b></div><button class="iconbtn" onclick="toast('Configuración del negocio')">☰</button></header>
 
-  <div class="layout">
-    <aside id="sideNav"></aside>
-    <main>
-      <section class="page active" id="inicio">
-        <div class="hero">
-          <div class="eyebrow">Lunes · 17 agosto 2026</div>
-          <h1>Buenos días.<br>Aquí tienes tu negocio hoy.</h1>
-          <p>8 meses de histórico importado · 18.426 tickets analizados</p>
-        </div>
+<main id="inicio" class="view active">
+<div class="eyebrow">Lunes · 17 de agosto</div>
+<h1>Buenos días.<br>Aquí tienes tu negocio hoy.</h1>
+<div class="sub">Actualizado hace 3 min · demo con datos de ejemplo</div>
+<div class="hero"><small>LO MÁS IMPORTANTE AHORA</small><h2>Tu negocio necesita tu atención.</h2><p>Hay 2 incidencias de stock y una oportunidad que podría mejorar el ticket medio.</p></div>
 
-        <div class="grid4">
-          <div class="card metric"><div class="eyebrow">Ventas hoy</div><div class="value">1.842 €</div><div class="sub"><span class="delta">↑ 12 %</span> vs. lunes pasado</div></div>
-          <div class="card metric"><div class="eyebrow">Tickets</div><div class="value">101</div><div class="sub">128 clientes estimados</div></div>
-          <div class="card metric"><div class="eyebrow">Ticket medio</div><div class="value">18,24 €</div><div class="sub">+0,72 € este mes</div></div>
-          <div class="card metric"><div class="eyebrow">Precisión</div><div class="value">82 %</div><div class="sub">Análisis de confianza alta</div></div>
-        </div>
-
-        <div class="section card">
-          <div class="sectionHead"><div><div class="eyebrow">Últimos 14 días</div><h2>Facturación diaria</h2></div><div class="eyebrow">Tendencia +8 %</div></div>
-          <div class="chart" id="chart"></div>
-        </div>
-
-        <div class="section">
-          <div class="sectionHead"><div><div class="eyebrow">Resumen inteligente</div><h2>Lo que debes saber hoy</h2><p>Prioridades, oportunidades y tendencias que merecen tu atención.</p></div></div>
-          <div class="insights">
-            <div class="card insight problem"><div class="stripe"></div><div><div class="kind">Atención · Stock</div><h3>Te quedarás sin cerveza mañana</h3><p>Quedan 18 L y el consumo medio es de 32 L al día. Basado en las últimas 8 semanas.</p><div class="impact">Riesgo estimado: ~180 € en ventas</div><button class="textBtn" onclick="openOrder()">Preparar pedido →</button></div></div>
-            <div class="card insight opportunity"><div class="stripe"></div><div><div class="kind">Oportunidad</div><h3>+240 €/mes potenciales</h3><p>Solo el 34 % de quienes piden hamburguesa añaden patatas.</p><div class="impact">Objetivo razonable: elevarlo al 45 %</div><button class="textBtn" onclick="showPage('impacto')">Ver oportunidad →</button></div></div>
-            <div class="card insight"><div class="stripe"></div><div><div class="kind">Tendencia</div><h3>La cerveza vende un 18 % más</h3><p>Comparado con los últimos cuatro lunes. La temperatura está explicando parte del incremento.</p><button class="textBtn" onclick="showPage('ventas')">Ver análisis →</button></div></div>
-            <div class="card insight problem"><div class="stripe"></div><div><div class="kind">Margen</div><h3>La hamburguesa completa deja poco margen</h3><p>Vende bien, pero su margen estimado está por debajo del resto de platos principales.</p><div class="impact">Ahorro potencial: ~85 €/mes</div><button class="textBtn" onclick="showPage('productos')">Ver producto →</button></div></div>
-          </div>
-        </div>
-
-        <div class="section two">
-          <div class="card prediction">
-            <div class="eyebrow">Predicción · Mañana</div>
-            <div class="big">2.150–2.450 €</div>
-            <p style="font-size:12px;color:var(--muted)">110–130 clientes · actividad esperada alta</p>
-            <span class="confidence">Confianza 82 %</span>
-            <button class="textBtn" style="display:block;margin-top:12px" onclick="openExplain()">¿Cómo se calcula? →</button>
-          </div>
-          <div class="card">
-            <div class="eyebrow">Impacto reciente</div>
-            <h3 style="font-family:'Playfair Display';font-size:22px;font-weight:500;margin:5px 0 8px">Una recomendación ya está funcionando</h3>
-            <p style="font-size:12px;color:var(--muted)">Hace 21 días sugerimos ofrecer patatas con las hamburguesas.</p>
-            <div style="display:flex;gap:22px;margin-top:12px"><div><div class="eyebrow">Antes</div><strong>34 %</strong></div><div><div class="eyebrow">Ahora</div><strong>43 %</strong></div><div><div class="eyebrow">Impacto</div><strong style="color:var(--wine)">+186 €</strong></div></div>
-          </div>
-        </div>
-
-        <div class="section card ask">
-          <div class="eyebrow" style="color:#baa99a">Cerebro del negocio</div>
-          <h2>Pregúntale a tu negocio</h2>
-          <p>Respuestas simuladas usando los mismos datos de esta demo.</p>
-          <div class="chips">
-            <button class="chip" onclick="ask('¿Qué tengo que pedir?')">¿Qué tengo que pedir?</button>
-            <button class="chip" onclick="ask('¿Dónde pierdo dinero?')">¿Dónde pierdo dinero?</button>
-            <button class="chip" onclick="ask('¿Cómo ha ido hoy?')">¿Cómo ha ido hoy?</button>
-          </div>
-          <div class="askRow"><input id="askInput" placeholder="Escribe una pregunta…" /><button onclick="ask()">Enviar</button></div>
-          <div class="answer" id="answer" style="display:none"></div>
-        </div>
-      </section>
-
-      <section class="page" id="ventas">
-        <div class="hero"><div class="eyebrow">Ventas</div><h1>Qué vendes y cuándo.</h1><p>Histórico importado del TPV y patrones del negocio.</p></div>
-        <div class="grid4">
-          <div class="card metric"><div class="eyebrow">Hoy</div><div class="value">1.842 €</div><div class="sub">+12 % vs. lunes anterior</div></div>
-          <div class="card metric"><div class="eyebrow">Mes</div><div class="value">39.280 €</div><div class="sub">+6,8 % intermensual</div></div>
-          <div class="card metric"><div class="eyebrow">Hora fuerte</div><div class="value">20:30</div><div class="sub">pico habitual viernes/sábado</div></div>
-          <div class="card metric"><div class="eyebrow">Producto top</div><div class="value" style="font-size:20px">Caña</div><div class="sub">612 uds. · 1.346 €</div></div>
-        </div>
-        <div class="section card"><h2 style="font-family:'Playfair Display';font-weight:500">Patrón detectado</h2><p style="color:var(--muted);font-size:13px">Cuando la temperatura supera 32 °C, las ventas de refrescos y cerveza aumentan aproximadamente un 21 %. El patrón se ha repetido 6 veces este verano.</p></div>
-      </section>
-
-      <section class="page" id="productos">
-        <div class="hero"><div class="eyebrow">Productos</div><h1>Margen, receta y consumo.</h1><p>El TPV dice qué se vende; el escandallo explica qué consume cada venta.</p></div>
-        <div class="two">
-          <div class="card">
-            <div class="eyebrow">Escandallo</div><h2 style="font-family:'Playfair Display';font-weight:500">Hamburguesa completa</h2>
-            <p style="font-size:12px;color:var(--muted)">Precio de venta 12,50 € · coste estimado 4,82 € · margen 61,4 %</p>
-            <div class="recipeGrid">
-              <span>Pan</span><strong>1 ud</strong><span>Carne</span><strong>180 g</strong><span>Queso</span><strong>1 ud</strong><span>Lechuga</span><strong>20 g</strong><span>Tomate</span><strong>30 g</strong><span>Salsa</span><strong>25 g</strong>
-            </div>
-          </div>
-          <div class="card">
-            <div class="eyebrow">Modificadores TPV</div><h3>El consumo se ajusta según el pedido</h3>
-            <p style="font-size:12px;color:var(--muted)">Sin tomate · Sin lechuga · Extra queso · Doble carne</p>
-            <div class="card" style="background:#fbf8f2;margin-top:13px"><div class="eyebrow">Ejemplo</div><p style="font-size:12px;margin:0">Hamburguesa + doble carne + sin tomate → 360 g carne, 0 g tomate.</p></div>
-          </div>
-        </div>
-      </section>
-
-      <section class="page" id="stock">
-        <div class="hero"><div class="eyebrow">Stock</div><h1>Qué queda y qué deberías pedir.</h1><p>Estimaciones basadas en ventas, recetas y compras registradas.</p></div>
-        <div class="tableWrap"><table><thead><tr><th>Producto</th><th>Actual</th><th>Consumo/día</th><th>Días</th><th>Estado</th></tr></thead><tbody>
-          <tr><td>Cerveza barril</td><td>18 L</td><td>32 L</td><td>0,6</td><td><span class="pill critical">Crítico</span></td></tr>
-          <tr><td>Huevos</td><td>30 uds.</td><td>18 uds.</td><td>1,7</td><td><span class="pill critical">Crítico</span></td></tr>
-          <tr><td>Carne ternera</td><td>14 kg</td><td>4,8 kg</td><td>2,9</td><td><span class="pill warn">Atención</span></td></tr>
-          <tr><td>Refrescos cola</td><td>210 uds.</td><td>30 uds.</td><td>7,0</td><td><span class="pill ok">Correcto</span></td></tr>
-        </tbody></table></div>
-        <button class="primary" style="margin-top:13px" onclick="openOrder()">Preparar pedido recomendado</button>
-      </section>
-
-      <section class="page" id="facturas">
-        <div class="hero"><div class="eyebrow">Compras / Facturas</div><h1>Haz una foto y actualiza el negocio.</h1><p>La demo simula extracción de productos, stock, costes y cambios de precio.</p></div>
-        <div class="two">
-          <div class="invoiceBox">
-            <div class="camera">📷</div><h3>Escanear factura</h3>
-            <p style="font-size:12px;color:var(--muted)">10 segundos de trabajo → datos y costes actualizados.</p>
-            <button class="primary" onclick="scanInvoice()">Simular escaneo</button>
-            <div class="result" id="invoiceResult">
-              <hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
-              <div class="eyebrow">Factura detectada</div><h3>Distribuciones Cinca · 684,30 €</h3>
-              <p style="font-size:12px;line-height:1.7">8 cajas Estrella Galicia<br>6 cajas Coca-Cola<br>12 botellas de ginebra<br>2 cajas de agua</p>
-              <div class="pill ok">✓ Stock y costes actualizados</div>
-            </div>
-          </div>
-          <div class="card">
-            <div class="eyebrow">Cambio detectado</div><h2 style="font-family:'Playfair Display';font-weight:500">La cerveza ha subido un 6,4 %</h2>
-            <p style="font-size:12px;color:var(--muted)">Si el nuevo precio se mantiene, el impacto estimado será de <strong>+73 €/mes</strong>.</p>
-            <button class="textBtn" onclick="alert('Demo: aquí abriríamos el detalle del proveedor y su historial de precios.')">Ver evolución →</button>
-          </div>
-        </div>
-        <div class="section card">
-          <div class="eyebrow">Historial de precios</div><h2 style="font-family:'Playfair Display';font-weight:500">Aceite de girasol</h2>
-          <div class="priceHistory">
-            <div class="priceLine"><span>Enero</span><strong>1,62 €/L</strong></div>
-            <div class="priceLine"><span>Marzo</span><strong>1,71 €/L</strong></div>
-            <div class="priceLine"><span>Junio</span><strong>1,84 €/L</strong></div>
-            <div class="priceLine"><span>Agosto</span><strong>1,96 €/L</strong></div>
-          </div>
-          <p style="margin:13px 0 0;font-size:12px"><strong>+21 % en 8 meses</strong> · impacto aproximado +94 €/mes.</p>
-        </div>
-      </section>
-
-      <section class="page" id="proveedores">
-        <div class="hero"><div class="eyebrow">Proveedores</div><h1>Compras y próximos pedidos.</h1></div>
-        <div class="insights">
-          <div class="card"><div class="eyebrow">Bebidas</div><h3>Distribuciones Cinca</h3><p style="font-size:12px;color:var(--muted)">Último pedido 12 ago · 612,40 € · cada 6–7 días</p><button class="textBtn" onclick="openOrder()">Preparar pedido →</button></div>
-          <div class="card"><div class="eyebrow">Carnes</div><h3>Carnicería López</h3><p style="font-size:12px;color:var(--muted)">Último pedido 14 ago · 284,90 € · cada 3–4 días</p><button class="textBtn">Ver productos →</button></div>
-        </div>
-      </section>
-
-      <section class="page" id="eventos">
-        <div class="hero"><div class="eyebrow">Eventos</div><h1>Prepara lo que viene.</h1><p>La IA usa eventos anteriores similares para estimar comida, bebida y personal.</p></div>
-        <div class="card"><div class="eyebrow">Sábado 22 agosto</div><h2 style="font-family:'Playfair Display';font-weight:500">Boda familia Aznar · 80 personas</h2><p style="font-size:12px;color:var(--muted)">Estimación demo: +1.920 € de facturación · refuerzo de 2 personas · +28 % de consumo de cerveza y refrescos.</p><button class="textBtn">Ver necesidades →</button></div>
-      </section>
-
-      <section class="page" id="predicciones">
-        <div class="hero"><div class="eyebrow">Predicciones</div><h1>Qué probablemente ocurrirá.</h1></div>
-        <div class="card prediction"><div class="eyebrow">Mañana</div><div class="big">2.150–2.450 €</div><p style="font-size:12px;color:var(--muted)">110–130 clientes · Confianza 82 % · últimos 6 martes + temperatura + tendencia reciente</p><button class="textBtn" onclick="openExplain()">¿Cómo se calcula? →</button></div>
-      </section>
-
-      <section class="page" id="cerebro">
-        <div class="hero"><div class="eyebrow">Cerebro del negocio</div><h1>Pregúntale a Bar Cinca.</h1><p>En el producto real, las respuestas se construirían con datos del propio negocio.</p></div>
-        <div class="card ask">
-          <h2>¿Qué quieres saber?</h2>
-          <div class="chips"><button class="chip" onclick="ask('¿Qué tengo que pedir?',true)">¿Qué tengo que pedir?</button><button class="chip" onclick="ask('¿Dónde pierdo dinero?',true)">¿Dónde pierdo dinero?</button><button class="chip" onclick="ask('¿Qué venderé el sábado?',true)">¿Qué venderé el sábado?</button></div>
-          <div class="askRow"><input id="askInput2" placeholder="Pregunta sobre el negocio…" /><button onclick="ask(null,true)">Enviar</button></div>
-          <div class="answer" id="answer2" style="display:none"></div>
-        </div>
-      </section>
-
-      <section class="page" id="impacto">
-        <div class="hero"><div class="eyebrow">Impacto</div><h1>Qué ocurrió después de actuar.</h1><p>El valor mensual se demuestra midiendo el resultado de las recomendaciones.</p></div>
-        <div class="card"><div class="eyebrow">Recomendación aplicada hace 21 días</div><h2 style="font-family:'Playfair Display';font-weight:500">Ofrecer patatas con las hamburguesas</h2><div class="grid4" style="margin-top:14px"><div><div class="eyebrow">Antes</div><strong>34 %</strong></div><div><div class="eyebrow">Ahora</div><strong>43 %</strong></div><div><div class="eyebrow">Mejora</div><strong>+9 ptos.</strong></div><div><div class="eyebrow">Impacto</div><strong style="color:var(--wine)">+186 €</strong></div></div></div>
-      </section>
-
-      <section class="page" id="config">
-        <div class="hero"><div class="eyebrow">Configuración</div><h1>Qué conoce el sistema.</h1></div>
-        <div class="two">
-          <div class="card"><div class="eyebrow">Precisión del análisis</div><h2 style="font-family:'Playfair Display';font-weight:500;font-size:36px">82 %</h2><div class="progress"><div style="width:82%"></div></div><p style="font-size:12px;color:var(--muted);margin-top:12px">✓ TPV conectado<br>✓ 8 meses de histórico<br>✓ Productos identificados<br>✓ Recetas principales<br>✓ Facturas recientes<br>△ Recetas secundarias incompletas</p></div>
-          <div class="card"><div class="eyebrow">Nuevo negocio</div><h3>Onboarding piloto</h3><div class="timeline"><div class="item"><div class="dot"></div><div><strong>Importar TPV</strong><div style="font-size:11px;color:var(--muted)">Histórico y tickets</div></div></div><div class="item"><div class="dot"></div><div><strong>Identificar productos</strong><div style="font-size:11px;color:var(--muted)">Categorías y modificadores</div></div></div><div class="item"><div class="dot"></div><div><strong>Recetas y proveedores</strong><div style="font-size:11px;color:var(--muted)">Solo los principales al principio</div></div></div><div class="item"><div class="dot"></div><div><strong>Primer informe</strong><div style="font-size:11px;color:var(--muted)">Valor desde el primer día</div></div></div></div></div>
-        </div>
-      </section>
-
-      <div class="footerNote">Demo visual · datos ficticios · sin conexión real a TPV ni proveedores</div>
-    </main>
-  </div>
+<div class="sectionTitle"><h3>Hoy</h3><span>vs. lunes pasado</span></div>
+<div class="grid">
+<div class="metric"><label>VENTAS</label><strong>1.842 €</strong><small>↑ 12 %</small></div>
+<div class="metric"><label>TICKETS</label><strong>101</strong><small>128 clientes est.</small></div>
+<div class="metric"><label>TICKET MEDIO</label><strong>18,24 €</strong><small>+0,72 € este mes</small></div>
+<div class="metric"><label>MAÑANA</label><strong>2,3k €</strong><small>Confianza 82 %</small></div>
 </div>
 
-<div class="drawerBg" id="drawerBg" onclick="closeDrawer(event)"><div class="drawer" onclick="event.stopPropagation()"><div class="drawerTop"><strong>Navegación</strong><button class="x" onclick="closeDrawer()">×</button></div><div id="drawerNav"></div></div></div>
+<div class="sectionTitle"><h3>Lo que debes saber</h3><span>3 hallazgos</span></div>
+<div class="alert"><span class="pill">PROBLEMA</span><h4>Te quedarás sin cerveza mañana</h4><p>Quedan 18 L y el consumo medio es de 32 L/día. Pedido recomendado: 6 cajas.</p><button class="action" onclick="toast('Pedido preparado · demo')">Preparar pedido →</button></div>
+<div class="alert opportunity"><span class="pill">OPORTUNIDAD</span><h4>+240 €/mes potenciales</h4><p>Solo el 34 % de los pedidos de hamburguesa añaden patatas.</p><button class="action" onclick="toast('Abriendo oportunidad · demo')">Ver oportunidad →</button></div>
+<div class="ask"><b>Pregúntale a tu negocio</b><p>Consulta ventas, stock, pedidos o márgenes.</p><div class="quick"><button class="chip" onclick="toast('IA conectará aquí en la siguiente fase')">¿Qué tengo que pedir?</button><button class="chip" onclick="toast('IA conectará aquí en la siguiente fase')">¿Cómo va este mes?</button></div></div>
+</main>
 
-<div class="modalBg" id="orderModal"><div class="modal"><div class="modalHead"><div><div class="eyebrow">Pedido recomendado</div><h2 style="font-family:'Playfair Display';font-weight:500;margin:2px 0">Distribuciones Cinca</h2></div><button class="x" onclick="closeModal('orderModal')">×</button></div><p style="font-size:12px;color:var(--muted)">Calculado con stock, consumo reciente y previsión de los próximos días.</p><div class="tableWrap"><table style="min-width:0"><tr><td>Estrella Galicia</td><td><strong>6 cajas</strong></td></tr><tr><td>Coca-Cola</td><td><strong>2 cajas</strong></td></tr><tr><td>Agua</td><td><strong>1 caja</strong></td></tr></table></div><button class="primary" style="width:100%;margin-top:14px" onclick="alert('Demo: el pedido queda preparado, pero no se envía realmente.')">Preparar borrador</button></div></div>
+<main id="stock" class="view">
+<div class="eyebrow">Inventario</div><h1>Stock</h1><div class="sub">Lo urgente primero.</div>
+<div class="listcard"><strong>🍺 Cerveza · 18 L</strong><small>0,6 días al ritmo actual · pedir 6 cajas</small></div>
+<div class="listcard"><strong>🥚 Huevos · 30 uds</strong><small>1,7 días al ritmo actual · pedir 90 uds</small></div>
+<div class="listcard"><strong>🥩 Carne · 12,4 kg</strong><small>Stock estimado suficiente para 3,2 días</small></div>
+</main>
 
-<div class="modalBg" id="explainModal"><div class="modal"><div class="modalHead"><div><div class="eyebrow">Transparencia</div><h2 style="font-family:'Playfair Display';font-weight:500;margin:2px 0">¿Cómo se calcula?</h2></div><button class="x" onclick="closeModal('explainModal')">×</button></div><p style="font-size:13px;line-height:1.6;color:var(--muted)">Los martes con más de 30 °C has vendido de media un 14 % más durante las últimas seis semanas. La previsión combina ese patrón con la tendencia reciente y la ausencia de eventos conocidos. Por eso la confianza estimada es del 82 %.</p></div></div>
+<main id="camera" class="view">
+<div class="eyebrow">Compras</div><h1>Escanear factura</h1><div class="sub">Haz una foto y la aplicación preparará los datos para confirmar.</div>
+<div class="upload"><div class="big">📷</div><h3>Fotografía una factura</h3><p>Detectaremos proveedor, productos, cantidades y precios.</p><button class="primary" onclick="toast('Cámara simulada en esta demo')">Abrir cámara</button></div>
+<div class="listcard"><strong>Antes de guardar</strong><small>Siempre te pediremos confirmar los datos detectados para evitar errores.</small></div>
+</main>
 
+<main id="brain" class="view">
+<div class="eyebrow">Cerebro del negocio</div><h1>Pregúntame.</h1><div class="sub">En la siguiente fase responderá usando los datos reales importados del TPV.</div>
+<div class="ask"><b>¿Qué quieres saber?</b><p>Ej.: “¿Qué producto está bajando esta semana?”</p><button class="primary" onclick="toast('Chat IA: siguiente fase')">Escribir pregunta</button></div>
+</main>
+
+<main id="more" class="view">
+<div class="eyebrow">Bar Cinca</div><h1>Más</h1>
+<div class="listcard"><strong>📄 Importar TPV</strong><small>CSV / Excel · próximo módulo funcional</small></div>
+<div class="listcard"><strong>🍔 Productos y recetas</strong><small>Costes, ingredientes y márgenes</small></div>
+<div class="listcard"><strong>🚚 Proveedores</strong><small>Compras y evolución de precios</small></div>
+<div class="listcard"><strong>⚙️ Configuración</strong><small>Negocio, usuarios y conexiones</small></div>
+</main>
+</div>
+
+<nav class="bottom">
+<button class="nav active" onclick="go('inicio',this)"><i>⌂</i>Inicio</button>
+<button class="nav" onclick="go('stock',this)"><i>▤</i>Stock</button>
+<button class="nav camera" onclick="go('camera',this)"><i>📷</i>Factura</button>
+<button class="nav" onclick="go('brain',this)"><i>✦</i>Cerebro</button>
+<button class="nav" onclick="go('more',this)"><i>•••</i>Más</button>
+</nav>
+<div id="toast" class="toast"></div>
 <script>
-const nav = [
- ['inicio','Inicio'],['ventas','Ventas'],['productos','Productos'],['stock','Stock'],
- ['facturas','Compras / Facturas'],['proveedores','Proveedores'],['eventos','Eventos'],
- ['predicciones','Predicciones'],['cerebro','Pregúntale a tu negocio'],['impacto','Impacto'],['config','Configuración']
-];
-
-function buildNav(target){
-  const el=document.getElementById(target); el.innerHTML='';
-  nav.forEach(([id,label])=>{
-    const b=document.createElement('button'); b.textContent=label; b.dataset.page=id;
-    b.onclick=()=>{showPage(id); closeDrawer();};
-    el.appendChild(b);
-  });
-}
-buildNav('sideNav'); buildNav('drawerNav');
-
-function showPage(id){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  const page=document.getElementById(id); if(page) page.classList.add('active');
-  document.querySelectorAll('aside button,.drawer button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-showPage('inicio');
-
-const heights=[44,57,49,53,66,84,91,58,52,60,74,88,94,71];
-const chart=document.getElementById('chart');
-heights.forEach((h,i)=>{ const b=document.createElement('div'); b.className='bar'; b.style.height=h+'%'; b.title=(1200+i*77)+' €'; chart.appendChild(b); });
-
-function openDrawer(){document.getElementById('drawerBg').classList.add('open')}
-function closeDrawer(e){if(!e || e.target.id==='drawerBg')document.getElementById('drawerBg').classList.remove('open')}
-function openOrder(){document.getElementById('orderModal').classList.add('open')}
-function openExplain(){document.getElementById('explainModal').classList.add('open')}
-function closeModal(id){document.getElementById(id).classList.remove('open')}
-function scanInvoice(){
-  const r=document.getElementById('invoiceResult');
-  r.classList.remove('show');
-  const btn=event.target; const old=btn.textContent; btn.textContent='Analizando factura…'; btn.disabled=true;
-  setTimeout(()=>{btn.textContent=old;btn.disabled=false;r.classList.add('show')},1100);
-}
-function ask(prefill,second){
-  const input=document.getElementById(second?'askInput2':'askInput');
-  const answer=document.getElementById(second?'answer2':'answer');
-  const q=(prefill||input.value||'¿Cómo ha ido hoy?').toLowerCase();
-  let text='';
-  if(q.includes('pedir')) text='Te recomiendo priorizar 6 cajas de Estrella Galicia y 90 huevos. La cerveza tiene 0,6 días de cobertura y los huevos 1,7 días. Prepararía el pedido hoy para evitar un riesgo estimado de unos 180 € diarios en ventas.';
-  else if(q.includes('pierdo')||q.includes('margen')) text='La principal señal está en la hamburguesa completa: vende bien, pero su margen es inferior al de otros platos. También hay una oportunidad comercial: solo el 34 % de las hamburguesas salen con patatas; elevarlo al 45 % tendría un potencial aproximado de +240 €/mes.';
-  else if(q.includes('sábado')||q.includes('fin de semana')) text='El sábado espero actividad alta. Hay una boda de 80 personas y el histórico de sábados similares apunta a mayor consumo de cerveza y refrescos. Prepararía stock adicional y dos personas de refuerzo.';
-  else text='Hoy llevas 1.842 € de facturación, un 12 % más que el lunes pasado, con 101 tickets y 18,24 € de ticket medio. La principal prioridad es cerveza: quedan unos 18 L y el consumo reciente ronda 32 L/día.';
-  answer.textContent=text; answer.style.display='block';
-  if(!prefill) input.value='';
-}
+function go(id,el){document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.nav').forEach(x=>x.classList.remove('active'));el.classList.add('active');scrollTo({top:0,behavior:'smooth'})}
+let tt; function toast(t){let x=document.getElementById('toast');x.textContent=t;x.style.display='block';clearTimeout(tt);tt=setTimeout(()=>x.style.display='none',2200)}
 </script>
-</body>
-</html>
+</body></html>
