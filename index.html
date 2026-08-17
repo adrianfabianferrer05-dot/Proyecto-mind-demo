@@ -4,381 +4,117 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#faf7f2">
-<title>Cerebro del Negocio · Piloto</title>
+<title>Atlas · Piloto conectado</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{
-  --bg:#faf7f2;--card:#fff;--ink:#191512;--muted:#766d65;--line:#e9e0d7;
-  --wine:#7c2635;--gold:#a87922;--brown:#281d17;--green:#4d6a4a;--soft:#f5efe8;
-}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-button,input,select,textarea{font:inherit}
-button{cursor:pointer}
+:root{--bg:#faf7f2;--card:#fff;--ink:#191512;--muted:#746b63;--line:#e8dfd6;--wine:#7c2635;--brown:#281d17;--green:#49684a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}button,input,textarea{font:inherit}button{cursor:pointer}
 .app{max-width:540px;margin:auto;min-height:100vh;padding:env(safe-area-inset-top) 16px calc(100px + env(safe-area-inset-bottom))}
 header{display:flex;align-items:center;justify-content:space-between;padding:16px 2px 12px;position:sticky;top:0;background:rgba(250,247,242,.96);backdrop-filter:blur(14px);z-index:6}
-.brand{display:flex;gap:10px;align-items:center}.mark{width:36px;height:36px;border:1px solid var(--ink);border-radius:10px;display:grid;place-items:center;font-family:Georgia,serif}.brand b{font-family:Georgia,serif;font-size:21px}
-.business{font-size:11px;color:var(--muted);display:block;margin-top:1px}
-.iconbtn{border:1px solid var(--line);background:#fff;border-radius:50%;width:42px;height:42px;font-size:20px}
-.eyebrow{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:14px}
-h1{font-family:Georgia,serif;font-size:37px;line-height:1.03;margin:8px 0 7px;font-weight:500}
-h2,h3,h4{margin-top:0}.sub{color:var(--muted);font-size:14px;margin-bottom:20px;line-height:1.5}
-.hero{background:var(--brown);color:#fff;border-radius:22px;padding:20px;margin-bottom:15px}.hero small{opacity:.68}.hero h2{font-family:Georgia,serif;font-size:26px;font-weight:500;margin:8px 0}.hero p{margin:0;opacity:.84;line-height:1.45}
-.sectionTitle{display:flex;align-items:end;justify-content:space-between;margin:23px 2px 11px;gap:8px}.sectionTitle h3{margin:0;font-size:18px}.sectionTitle span{font-size:12px;color:var(--muted)}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.metric{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:15px;min-height:116px}
-.metric label{font-size:10px;font-weight:800;letter-spacing:.05em}.metric strong{font-family:Georgia,serif;font-size:27px;display:block;margin:10px 0 4px}.metric small{color:var(--muted)}
-.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px;margin:10px 0}
-.alert{border-left:4px solid var(--wine)}.opportunity{border-left-color:var(--gold)}
-.pill{display:inline-block;background:#f7e8e2;color:#8d3d2d;border-radius:99px;padding:6px 9px;font-size:10px;font-weight:900;letter-spacing:.05em}
-.opportunity .pill{background:#fbf2d9;color:#755817}
-.alert h4{font-size:18px;margin:11px 0 6px}.alert p{color:#514a44;margin:0 0 13px;line-height:1.45;font-size:14px}
-.action{border:0;background:none;font-weight:800;font-size:14px;padding:0;color:var(--ink)}
-.primary{background:var(--wine);color:#fff;border:0;border-radius:14px;padding:13px 15px;font-weight:800}
-.secondary{background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:14px;padding:13px 15px;font-weight:800}
-.full{width:100%}
+.brand{display:flex;gap:10px;align-items:center}.mark{width:36px;height:36px;border:1px solid var(--ink);border-radius:10px;display:grid;place-items:center;font-family:Georgia,serif}.brand b{font-family:Georgia,serif;font-size:21px}.business{font-size:11px;color:var(--muted);display:block}.status{font-size:11px;border:1px solid var(--line);background:white;padding:7px 9px;border-radius:99px}.status.ok{color:var(--green)}
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:14px}h1{font-family:Georgia,serif;font-size:37px;line-height:1.03;margin:8px 0 7px;font-weight:500}.sub{color:var(--muted);font-size:14px;margin-bottom:20px;line-height:1.5}
+.hero{background:var(--brown);color:#fff;border-radius:22px;padding:20px;margin-bottom:15px}.hero h2{font-family:Georgia,serif;font-size:26px;font-weight:500;margin:8px 0}.hero p{margin:0;opacity:.84;line-height:1.45}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.metric,.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:15px}.metric{min-height:116px}.metric label{font-size:10px;font-weight:800}.metric strong{font-family:Georgia,serif;font-size:27px;display:block;margin:10px 0 4px}.metric small{color:var(--muted)}.card{margin:10px 0}
+.primary{background:var(--wine);color:#fff;border:0;border-radius:14px;padding:13px 15px;font-weight:800}.secondary{background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:14px;padding:13px 15px;font-weight:800}.full{width:100%}
 .bottom{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:min(540px,100%);background:rgba(255,255,255,.97);backdrop-filter:blur(16px);border-top:1px solid var(--line);padding:9px 10px calc(9px + env(safe-area-inset-bottom));display:grid;grid-template-columns:1fr 1fr 1.18fr 1fr 1fr;z-index:8}
 .nav{border:0;background:none;font-size:10px;color:#625a53;display:grid;gap:4px;place-items:center}.nav i{font-style:normal;font-size:21px}.nav.active{color:var(--wine);font-weight:800}
-.camera{margin-top:-25px}.camera i{width:54px;height:54px;border-radius:50%;background:var(--wine);color:#fff;display:grid;place-items:center;box-shadow:0 7px 20px #7b27343b;font-size:24px}
-.view{display:none}.view.active{display:block}
-.toast{display:none;position:fixed;bottom:106px;left:50%;transform:translateX(-50%);background:#171411;color:white;padding:12px 16px;border-radius:14px;font-size:13px;z-index:20;width:max-content;max-width:86%}
-.listcard{background:#fff;border:1px solid var(--line);border-radius:18px;padding:15px;margin:9px 0}.listcard strong{display:block}.listcard small{color:var(--muted);line-height:1.45}
-.upload{border:1.5px dashed #cfc4b8;border-radius:20px;background:#fff;padding:26px 17px;text-align:center}.upload .big{font-size:34px}.upload p{color:var(--muted);font-size:14px}
-.hidden{display:none!important}
-.stepper{display:flex;gap:6px;margin:10px 0 19px}.step{height:5px;flex:1;background:#e7ddd3;border-radius:99px}.step.on{background:var(--wine)}
-.maprow{display:grid;grid-template-columns:1fr 24px 1fr;align-items:center;gap:7px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:11px;margin:8px 0}.maprow span{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis}.maprow b{text-align:center}.maprow select{width:100%;border:1px solid var(--line);border-radius:10px;background:#fff;padding:8px;font-size:12px}
-.preview{overflow:auto;border:1px solid var(--line);border-radius:16px;background:#fff}table{border-collapse:collapse;min-width:620px;width:100%}th,td{font-size:11px;padding:10px 11px;border-bottom:1px solid #eee6dd;text-align:left}th{color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
-.good{display:inline-block;background:#edf4eb;color:var(--green);border-radius:99px;padding:6px 9px;font-size:11px;font-weight:800}
-.kpirow{display:grid;grid-template-columns:1fr 1fr;gap:10px}.kpi{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px}.kpi span{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;font-weight:800}.kpi strong{display:block;font-family:Georgia,serif;font-size:24px;margin-top:6px}
-.ask{background:#fff;border:1px solid var(--line);border-radius:20px;padding:16px}.ask textarea{width:100%;min-height:88px;border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:10px;resize:none}.answer{background:var(--brown);color:#fff;border-radius:17px;padding:15px;margin-top:12px;font-size:14px;line-height:1.55}
-.invoicePreview{width:100%;max-height:260px;object-fit:cover;border-radius:16px;border:1px solid var(--line);margin-top:12px}
+.view{display:none}.view.active{display:block}.hidden{display:none!important}
+.listcard{background:#fff;border:1px solid var(--line);border-radius:18px;padding:15px;margin:9px 0}.listcard strong{display:block}.listcard small{color:var(--muted)}
 .formgrid{display:grid;gap:9px}.formgrid label{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase}.formgrid input{width:100%;border:1px solid var(--line);border-radius:12px;padding:11px;background:#fff}
-.recipe{display:grid;grid-template-columns:1fr auto;gap:8px 15px;font-size:13px}
-.badge{display:inline-block;border-radius:99px;padding:5px 8px;background:var(--soft);font-size:11px;margin:3px 4px 3px 0}
-.note{font-size:12px;color:var(--muted);line-height:1.5}
-hr{border:0;border-top:1px solid var(--line);margin:16px 0}
+.upload{border:1.5px dashed #cfc4b8;border-radius:20px;background:#fff;padding:26px 17px;text-align:center}.upload .big{font-size:34px}
+.invoicePreview{width:100%;max-height:280px;object-fit:cover;border-radius:16px;border:1px solid var(--line);margin-top:12px}
+.overlay{position:fixed;inset:0;background:var(--bg);z-index:50;padding:24px 18px;overflow:auto}.overlayInner{max-width:460px;margin:40px auto}.spinner{width:30px;height:30px;border:3px solid #e6dcd3;border-top-color:var(--wine);border-radius:50%;animation:s 1s linear infinite;margin:20px auto}@keyframes s{to{transform:rotate(360deg)}}
+.answer{background:var(--brown);color:#fff;border-radius:17px;padding:15px;margin-top:12px;font-size:14px;line-height:1.55}
+.toast{display:none;position:fixed;bottom:106px;left:50%;transform:translateX(-50%);background:#171411;color:white;padding:12px 16px;border-radius:14px;font-size:13px;z-index:20}
 </style>
 </head>
 <body>
+<div id="boot" class="overlay"><div class="overlayInner"><div class="eyebrow">Atlas · Piloto conectado</div><h1>Conectando con tu negocio.</h1><div class="spinner"></div><p class="sub" id="bootText">Iniciando sesión segura…</p></div></div>
+<div id="setup" class="overlay hidden"><div class="overlayInner"><div class="eyebrow">Primera configuración</div><h1>Vamos a crear el restaurante.</h1><div class="card formgrid"><div><label>Nombre</label><input id="setupName" placeholder="Nombre del restaurante"></div><div><label>Ciudad</label><input id="setupCity" placeholder="Barbastro"></div><button class="primary full" onclick="createBusiness()">Crear negocio</button></div></div></div>
+
 <div class="app">
-<header>
-  <div class="brand"><div class="mark">A</div><div><b>Atlas</b><span class="business" id="businessName">Bar Cinca</span></div></div>
-  <button class="iconbtn" onclick="showView('config')">☰</button>
-</header>
+<header><div class="brand"><div class="mark">A</div><div><b>Atlas</b><span class="business" id="businessName">Conectando…</span></div></div><span class="status" id="cloudStatus">○ nube</span></header>
 
-<main id="inicio" class="view active">
-  <div class="eyebrow">Resumen del negocio</div>
-  <h1>Buenos días.<br>Aquí tienes tu negocio hoy.</h1>
-  <div class="sub" id="historyText">Demo preparada para importar datos reales.</div>
+<main id="inicio" class="view active"><div class="eyebrow">Resumen</div><h1>Buenos días.<br>Aquí tienes tu negocio hoy.</h1><div class="sub" id="historyText">Cargando datos desde Supabase…</div><div class="hero"><h2>Atlas ya está preparado para trabajar en la nube.</h2><p id="heroText">Importa ventas reales del TPV y empezaremos a construir el histórico.</p></div><div class="grid"><div class="metric"><label>VENTAS</label><strong id="salesKpi">0 €</strong><small>guardadas</small></div><div class="metric"><label>TICKETS</label><strong id="ticketsKpi">0</strong><small>pedidos</small></div><div class="metric"><label>TICKET MEDIO</label><strong id="avgKpi">0 €</strong><small>venta / ticket</small></div><div class="metric"><label>PRODUCTO TOP</label><strong id="topKpi" style="font-size:19px">—</strong><small>más unidades</small></div></div></main>
 
-  <div class="hero"><small>LO MÁS IMPORTANTE AHORA</small><h2>Tu negocio necesita tu atención.</h2><p id="heroText">Importa el TPV para sustituir los datos ficticios por información real del restaurante.</p></div>
+<main id="stock" class="view"><div class="eyebrow">Inventario</div><h1>Stock inicial</h1><div id="ingredientsList"></div><div class="card formgrid"><div><label>Ingrediente</label><input id="ingName" placeholder="Cerveza barril"></div><div><label>Unidad</label><input id="ingUnit" value="L"></div><div><label>Stock actual</label><input id="ingStock" inputmode="decimal" placeholder="18"></div><div><label>Mínimo</label><input id="ingMin" inputmode="decimal" placeholder="10"></div><button class="primary full" onclick="addIngredient()">Guardar stock</button></div></main>
 
-  <div class="sectionTitle"><h3>Hoy / periodo importado</h3><span>datos actuales</span></div>
-  <div class="grid">
-    <div class="metric"><label>VENTAS</label><strong id="salesKpi">1.842 €</strong><small id="salesSub">demo</small></div>
-    <div class="metric"><label>TICKETS</label><strong id="ticketsKpi">101</strong><small>pedidos detectados</small></div>
-    <div class="metric"><label>TICKET MEDIO</label><strong id="avgKpi">18,24 €</strong><small>venta / ticket</small></div>
-    <div class="metric"><label>PRODUCTO TOP</label><strong id="topKpi" style="font-size:20px">Caña</strong><small>más unidades</small></div>
-  </div>
+<main id="factura" class="view"><div class="eyebrow">Compras</div><h1>Factura</h1><div class="sub">La foto se guardará de forma privada en Supabase.</div><div class="upload"><div class="big">📷</div><input class="hidden" id="invoiceFile" type="file" accept="image/*" capture="environment" onchange="handleInvoice(this.files[0])"><button class="primary full" onclick="document.getElementById('invoiceFile').click()">Abrir cámara / fotos</button></div><img id="invoicePreview" class="invoicePreview hidden"><div id="invoiceForm" class="card formgrid hidden"><div><label>Proveedor</label><input id="invProvider" placeholder="Distribuciones Cinca"></div><div><label>Total</label><input id="invTotal" placeholder="684,30"></div><button class="primary full" onclick="saveInvoice()">Guardar factura</button></div><div id="invoiceSaved" class="card hidden"></div></main>
 
-  <div class="sectionTitle"><h3>Lo que debes saber</h3><span>prioridad</span></div>
-  <div class="card alert"><span class="pill">STOCK</span><h4>Te quedarás sin cerveza mañana</h4><p>Ejemplo de recomendación. Cuando configuremos recetas y stock real, este cálculo se alimentará de ventas y compras.</p><button class="action" onclick="toast('Pedido recomendado preparado · piloto')">Preparar pedido →</button></div>
-  <div class="card alert opportunity"><span class="pill">OPORTUNIDAD</span><h4>+240 €/mes potenciales</h4><p>Ejemplo de oportunidad basada en venta cruzada. En el piloto podremos sustituirla por patrones del TPV importado.</p><button class="action" onclick="showView('cerebro')">Preguntar al cerebro →</button></div>
-</main>
+<main id="cerebro" class="view"><div class="eyebrow">Cerebro</div><h1>Pregúntale a tu negocio.</h1><div class="card"><textarea id="brainQ" style="width:100%;min-height:90px;border:1px solid var(--line);border-radius:13px;padding:12px" placeholder="¿Cómo ha ido el negocio?"></textarea><button class="primary full" style="margin-top:10px" onclick="brain()">Analizar</button><div id="brainA" class="answer hidden"></div></div></main>
 
-<main id="stock" class="view">
-  <div class="eyebrow">Inventario</div><h1>Stock</h1><div class="sub">Primera versión del control operativo.</div>
-  <div class="listcard"><strong>🍺 Cerveza · 18 L</strong><small>0,6 días al ritmo actual · pedir 6 cajas</small></div>
-  <div class="listcard"><strong>🥚 Huevos · 30 uds</strong><small>1,7 días al ritmo actual · pedir 90 uds</small></div>
-  <div class="listcard"><strong>🥩 Carne · 12,4 kg</strong><small>Stock estimado suficiente para 3,2 días</small></div>
-
-  <div class="sectionTitle"><h3>Receta ejemplo</h3><span>escandallo</span></div>
-  <div class="card">
-    <h3>Hamburguesa completa</h3>
-    <div class="recipe">
-      <span>Pan</span><strong>1 ud</strong><span>Carne</span><strong>180 g</strong><span>Queso</span><strong>1 ud</strong><span>Lechuga</span><strong>20 g</strong><span>Tomate</span><strong>30 g</strong>
-    </div>
-    <hr>
-    <span class="badge">Sin tomate</span><span class="badge">Sin lechuga</span><span class="badge">Extra queso</span><span class="badge">Doble carne</span>
-  </div>
-</main>
-
-<main id="factura" class="view">
-  <div class="eyebrow">Compras</div><h1>Escanear factura</h1><div class="sub">En esta versión puedes hacer una foto o elegir una imagen y confirmar los datos detectados manualmente.</div>
-
-  <div class="upload">
-    <div class="big">📷</div><h3>Haz una foto de la factura</h3>
-    <p>El piloto guarda una previsualización local y prepara el formulario para confirmar proveedor, total y cambios de precio.</p>
-    <input class="hidden" id="invoiceFile" type="file" accept="image/*" capture="environment" onchange="handleInvoiceImage(this.files[0])">
-    <button class="primary full" onclick="document.getElementById('invoiceFile').click()">Abrir cámara / fotos</button>
-  </div>
-
-  <img id="invoicePreview" class="invoicePreview hidden" alt="Factura">
-  <div id="invoiceForm" class="card hidden">
-    <div class="good">✓ Imagen recibida</div>
-    <h3 style="margin-top:12px">Confirmar factura</h3>
-    <div class="formgrid">
-      <div><label>Proveedor</label><input id="invProvider" value="Distribuciones Cinca"></div>
-      <div><label>Total</label><input id="invTotal" value="684,30 €"></div>
-      <div><label>Producto destacado</label><input id="invProduct" value="Estrella Galicia"></div>
-      <div><label>Variación de precio</label><input id="invChange" value="+6,4 %"></div>
-    </div>
-    <button class="primary full" style="margin-top:12px" onclick="saveInvoice()">Confirmar y actualizar</button>
-  </div>
-
-  <div id="invoiceResult" class="card hidden">
-    <span class="pill">CAMBIO DETECTADO</span>
-    <h3 style="margin:12px 0 6px">El proveedor ha subido un precio</h3>
-    <p id="invoiceResultText" class="note"></p>
-  </div>
-</main>
-
-<main id="cerebro" class="view">
-  <div class="eyebrow">Cerebro del negocio</div><h1>Pregúntale a tu negocio.</h1><div class="sub">Este piloto responde usando los datos importados y algunas reglas. Más adelante lo conectaremos a una IA real por API.</div>
-  <div class="ask">
-    <strong>Escribe una pregunta</strong>
-    <textarea id="brainQuestion" placeholder="Ej.: ¿Qué producto vendo más?"></textarea>
-    <button class="primary full" onclick="brainAnswer()">Analizar</button>
-    <div id="brainAnswer" class="answer hidden"></div>
-  </div>
-  <div class="sectionTitle"><h3>Prueba</h3><span>preguntas rápidas</span></div>
-  <button class="secondary full" onclick="quickAsk('¿Cómo ha ido el periodo importado?')">¿Cómo ha ido el periodo importado?</button>
-  <button class="secondary full" onclick="quickAsk('¿Qué producto vendo más?')">¿Qué producto vendo más?</button>
-  <button class="secondary full" onclick="quickAsk('¿Dónde puedo mejorar?')">¿Dónde puedo mejorar?</button>
-</main>
-
-<main id="mas" class="view">
-  <div class="eyebrow">Herramientas</div><h1>Más</h1>
-  <div class="listcard" onclick="showView('importar')" style="cursor:pointer"><strong>📄 Importar TPV</strong><small>CSV real · detecta columnas y calcula ventas, tickets y producto top.</small></div>
-  <div class="listcard" onclick="showView('impacto')" style="cursor:pointer"><strong>📈 Impacto</strong><small>Muestra qué ocurrió después de aplicar recomendaciones.</small></div>
-  <div class="listcard" onclick="showView('config')" style="cursor:pointer"><strong>⚙️ Configuración</strong><small>Nombre del negocio y estado del piloto.</small></div>
-</main>
-
-<main id="importar" class="view">
-  <div class="eyebrow">Importación TPV</div><h1>Trae el histórico del restaurante.</h1><div class="sub">Carga un CSV real desde el móvil. Todo se procesa en el navegador en esta versión.</div>
-  <div class="stepper"><div class="step on" id="s1"></div><div class="step" id="s2"></div><div class="step" id="s3"></div><div class="step" id="s4"></div></div>
-
-  <section id="importStep1">
-    <div class="upload">
-      <div class="big">📄</div><h3>Selecciona un CSV</h3>
-      <p>Buscaremos fecha, ticket, producto, cantidad, precio y total.</p>
-      <input type="file" id="csvFile" accept=".csv,text/csv" class="hidden" onchange="handleCSV(this.files[0])">
-      <button class="primary full" onclick="document.getElementById('csvFile').click()">Elegir CSV</button>
-      <button class="secondary full" style="margin-top:10px" onclick="loadDemoCSV()">Probar con datos de ejemplo</button>
-    </div>
-    <div class="card"><strong>Importante</strong><p class="note">Los datos permanecen solo en este dispositivo mediante almacenamiento local. Es suficiente para validar el piloto, no para una versión comercial.</p></div>
-  </section>
-
-  <section id="importStep2" class="hidden">
-    <div class="sectionTitle"><h3>Columnas detectadas</h3><span id="rowCount"></span></div>
-    <div id="mappingRows"></div>
-    <button class="primary full" onclick="goPreview()">Continuar</button>
-    <button class="secondary full" style="margin-top:10px" onclick="resetImport()">Volver</button>
-  </section>
-
-  <section id="importStep3" class="hidden">
-    <div class="sectionTitle"><h3>Vista previa</h3><span>primeras 8 filas</span></div>
-    <div class="preview"><table id="previewTable"></table></div>
-    <button class="primary full" style="margin-top:12px" onclick="confirmImport()">Confirmar importación</button>
-    <button class="secondary full" style="margin-top:10px" onclick="showImportStep(2)">Revisar columnas</button>
-  </section>
-
-  <section id="importStep4" class="hidden">
-    <div class="good">✓ Datos preparados</div>
-    <h2 style="font-family:Georgia,serif;font-size:29px;font-weight:500;margin:14px 0 8px">Primera lectura del negocio</h2>
-    <div class="kpirow">
-      <div class="kpi"><span>Filas</span><strong id="sumRows">—</strong></div>
-      <div class="kpi"><span>Ventas</span><strong id="sumSales">—</strong></div>
-      <div class="kpi"><span>Tickets</span><strong id="sumTickets">—</strong></div>
-      <div class="kpi"><span>Ticket medio</span><strong id="sumAvg">—</strong></div>
-    </div>
-    <div class="card opportunity alert" id="topFinding"></div>
-    <button class="primary full" onclick="applyImportedData()">Usar estos datos en la app</button>
-    <button class="secondary full" style="margin-top:10px" onclick="resetImport()">Importar otro archivo</button>
-  </section>
-</main>
-
-<main id="impacto" class="view">
-  <div class="eyebrow">Impacto</div><h1>Demuestra el valor.</h1><div class="sub">La renovación mensual se gana mostrando qué recomendación se aplicó y qué ocurrió.</div>
-  <div class="card">
-    <span class="pill">RECOMENDACIÓN APLICADA</span>
-    <h3 style="margin:12px 0 6px">Ofrecer patatas con hamburguesas</h3>
-    <p class="note">Ejemplo de seguimiento durante 21 días.</p>
-    <div class="kpirow">
-      <div class="kpi"><span>Antes</span><strong>34 %</strong></div>
-      <div class="kpi"><span>Ahora</span><strong>43 %</strong></div>
-      <div class="kpi"><span>Impacto</span><strong>+186 €</strong></div>
-      <div class="kpi"><span>Días</span><strong>21</strong></div>
-    </div>
-  </div>
-</main>
-
-<main id="config" class="view">
-  <div class="eyebrow">Configuración</div><h1>Preparar piloto.</h1>
-  <div class="card">
-    <div class="formgrid">
-      <div><label>Nombre del negocio</label><input id="businessInput" value="Bar Cinca"></div>
-    </div>
-    <button class="primary full" style="margin-top:12px" onclick="saveBusiness()">Guardar nombre</button>
-  </div>
-  <div class="card">
-    <strong>Estado del piloto</strong>
-    <p class="note">✓ Mobile-first<br>✓ Importación CSV<br>✓ Persistencia local<br>✓ Foto de factura / confirmación<br>✓ Cerebro basado en datos importados<br>✓ Recetas y stock de ejemplo<br>✓ Impacto de decisiones<br>△ Sin backend real<br>△ Sin IA externa real<br>△ Sin integración directa con TPV</p>
-  </div>
-</main>
+<main id="mas" class="view"><div class="eyebrow">Herramientas</div><h1>Más</h1><div class="listcard" onclick="document.getElementById('csvFile').click()"><strong>📄 Importar TPV</strong><small>CSV real: guarda ventas, tickets y productos en Supabase.</small></div><input type="file" id="csvFile" accept=".csv,text/csv" class="hidden" onchange="handleCSV(this.files[0])"><div id="importStatus" class="card hidden"></div><div class="listcard" onclick="refreshAll()"><strong>↻ Actualizar nube</strong><small>Volver a leer datos guardados.</small></div></main>
 </div>
 
-<nav class="bottom">
-  <button class="nav active" onclick="navTo('inicio',this)"><i>⌂</i>Inicio</button>
-  <button class="nav" onclick="navTo('stock',this)"><i>▤</i>Stock</button>
-  <button class="nav camera" onclick="navTo('factura',this)"><i>📷</i>Factura</button>
-  <button class="nav" onclick="navTo('cerebro',this)"><i>✦</i>Cerebro</button>
-  <button class="nav" onclick="navTo('mas',this)"><i>•••</i>Más</button>
-</nav>
+<nav class="bottom"><button class="nav active" onclick="navTo('inicio',this)"><i>⌂</i>Inicio</button><button class="nav" onclick="navTo('stock',this)"><i>▤</i>Stock</button><button class="nav" onclick="navTo('factura',this)"><i>📷</i>Factura</button><button class="nav" onclick="navTo('cerebro',this)"><i>✦</i>Cerebro</button><button class="nav" onclick="navTo('mas',this)"><i>•••</i>Más</button></nav>
 <div id="toast" class="toast"></div>
 
 <script>
-let tt;
-function toast(t){const x=document.getElementById('toast');x.textContent=t;x.style.display='block';clearTimeout(tt);tt=setTimeout(()=>x.style.display='none',2400)}
-function showView(id){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(id).classList.add('active');scrollTo({top:0,behavior:'smooth'})}
-function navTo(id,el){showView(id);document.querySelectorAll('.nav').forEach(n=>n.classList.remove('active'));el.classList.add('active')}
+const SUPABASE_URL = "https://tptlyxjshhovjtnfhotr.supabase.co";
+const SUPABASE_KEY = "sb_publishable_VVuK_z-t5A-CKKs8wDzBTg_jzEr0EE8";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let businessId=null,dashboard={sales:0,tickets:0,avg:0,top:'—',topQty:0},invoiceFile=null;
 
-let state=JSON.parse(localStorage.getItem('atlasPilot')||'{}');
-function saveState(){localStorage.setItem('atlasPilot',JSON.stringify(state))}
-function money(v){return new Intl.NumberFormat('es-ES',{style:'currency',currency:'EUR'}).format(v||0)}
-function restore(){
-  if(state.business){document.getElementById('businessName').textContent=state.business;document.getElementById('businessInput').value=state.business}
-  if(state.summary){renderSummaryToHome(state.summary)}
+function toast(t){const x=document.getElementById('toast');x.textContent=t;x.style.display='block';clearTimeout(window._tt);window._tt=setTimeout(()=>x.style.display='none',2200)}
+function navTo(id,el){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.nav').forEach(n=>n.classList.remove('active'));el.classList.add('active');scrollTo(0,0)}
+function money(v){return new Intl.NumberFormat('es-ES',{style:'currency',currency:'EUR'}).format(Number(v)||0)}
+async function boot(){
+ try{
+  let {data:{session}}=await sb.auth.getSession();
+  if(!session){const {data,error}=await sb.auth.signInAnonymously();if(error)throw error;session=data.session}
+  document.getElementById('cloudStatus').textContent='● conectado';document.getElementById('cloudStatus').classList.add('ok');
+  const {data:members,error}=await sb.from('business_members').select('business_id').limit(1);if(error)throw error;
+  if(!members?.length){document.getElementById('boot').classList.add('hidden');document.getElementById('setup').classList.remove('hidden');return}
+  businessId=members[0].business_id;await loadBusiness();document.getElementById('boot').classList.add('hidden');await refreshAll();
+ }catch(e){document.getElementById('bootText').textContent='No se pudo conectar: '+e.message}
 }
-function saveBusiness(){
-  state.business=document.getElementById('businessInput').value.trim()||'Mi restaurante';
-  saveState();restore();toast('Nombre actualizado')
+async function createBusiness(){
+ const name=document.getElementById('setupName').value.trim();if(!name)return alert('Pon el nombre del restaurante');
+ const city=document.getElementById('setupCity').value.trim();
+ const {data,error}=await sb.rpc('create_business',{p_name:name,p_business_type:'restaurant',p_city:city||null});if(error)return alert(error.message);
+ businessId=data;document.getElementById('setup').classList.add('hidden');await loadBusiness();await refreshAll();toast('Negocio creado')
 }
-
-let rawRows=[],headers=[],mapping={},currentSummary=null;
-function splitCSVLine(line,d){
-  let out=[],cur='',q=false;
-  for(let i=0;i<line.length;i++){
-    const c=line[i];
-    if(c==='"'){ if(q && line[i+1]==='"'){cur+='"';i++} else q=!q }
-    else if(c===d && !q){out.push(cur.trim());cur=''}
-    else cur+=c
-  }
-  out.push(cur.trim());return out
+async function loadBusiness(){const {data,error}=await sb.from('businesses').select('*').eq('id',businessId).single();if(error)throw error;document.getElementById('businessName').textContent=data.name}
+async function refreshAll(){if(!businessId)return;await Promise.all([loadDashboard(),loadIngredients()])}
+async function loadDashboard(){
+ const {data:sales,error:e1}=await sb.from('sales').select('id,total');if(e1)throw e1;
+ const {data:items,error:e2}=await sb.from('sale_items').select('product_name,quantity');if(e2)throw e2;
+ const total=(sales||[]).reduce((a,x)=>a+Number(x.total||0),0),tickets=(sales||[]).length,avg=tickets?total/tickets:0,counts={};
+ (items||[]).forEach(x=>counts[x.product_name]=(counts[x.product_name]||0)+Number(x.quantity||0));
+ const top=Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]||['—',0];dashboard={sales:total,tickets,avg,top:top[0],topQty:top[1]};
+ document.getElementById('salesKpi').textContent=money(total);document.getElementById('ticketsKpi').textContent=tickets;document.getElementById('avgKpi').textContent=money(avg);document.getElementById('topKpi').textContent=top[0];document.getElementById('historyText').textContent=tickets?`${tickets} tickets guardados en Supabase`:'Aún no hay ventas importadas';
 }
-function detectDelimiter(text){
-  const first=(text.split(/\r?\n/).find(x=>x.trim())||'');
-  return [',',';','\t'].sort((a,b)=>first.split(b).length-first.split(a).length)[0]
+async function loadIngredients(){
+ const {data,error}=await sb.from('ingredients').select('*').order('name');if(error)throw error;const box=document.getElementById('ingredientsList');box.innerHTML='';
+ (data||[]).forEach(x=>box.innerHTML+=`<div class="listcard"><strong>${x.name} · ${x.current_stock} ${x.unit}</strong><small>Mínimo: ${x.minimum_stock??'—'}</small></div>`)
 }
-function parseCSV(text){
-  text=text.replace(/^\uFEFF/,'');
-  const lines=text.split(/\r?\n/).filter(x=>x.trim());
-  if(lines.length<2)throw new Error('El archivo no contiene suficientes filas.');
-  const d=detectDelimiter(text), h=splitCSVLine(lines[0],d);
-  const rows=lines.slice(1).map(l=>splitCSVLine(l,d)).filter(r=>r.some(v=>v!=='')).map(r=>Object.fromEntries(h.map((k,i)=>[k,r[i]??''])));
-  return {headers:h,rows}
+async function addIngredient(){
+ const name=document.getElementById('ingName').value.trim();if(!name)return;
+ const row={business_id:businessId,name,unit:document.getElementById('ingUnit').value.trim()||'unit',current_stock:parseFloat(document.getElementById('ingStock').value.replace(',','.'))||0,minimum_stock:parseFloat(document.getElementById('ingMin').value.replace(',','.'))||null};
+ const {error}=await sb.from('ingredients').insert(row);if(error)return alert(error.message);document.getElementById('ingName').value='';await loadIngredients();toast('Stock guardado')
 }
-function norm(s){return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'')}
-function guessField(h){
-  const n=norm(h);
-  if(/fecha|date|dia/.test(n))return'fecha';
-  if(/hora|time/.test(n))return'hora';
-  if(/ticket|pedido|order|idventa|factura/.test(n))return'ticket';
-  if(/producto|articulo|item|descripcion|concepto|nombreproducto/.test(n))return'producto';
-  if(/cantidad|qty|unidades|uds/.test(n))return'cantidad';
-  if(/precio|price|pvp/.test(n))return'precio';
-  if(/total|importe|subtotal|ventatotal/.test(n))return'total';
-  if(/categoria|familia|category/.test(n))return'categoria';
-  return'ignorar'
+function handleInvoice(file){if(!file)return;invoiceFile=file;const img=document.getElementById('invoicePreview');img.src=URL.createObjectURL(file);img.classList.remove('hidden');document.getElementById('invoiceForm').classList.remove('hidden')}
+async function saveInvoice(){
+ if(!invoiceFile)return;const pname=document.getElementById('invProvider').value.trim()||'Proveedor';let {data:sups}=await sb.from('suppliers').select('id').eq('name',pname).limit(1);let sid=sups?.[0]?.id;
+ if(!sid){const {data,error}=await sb.from('suppliers').insert({business_id:businessId,name:pname}).select('id').single();if(error)return alert(error.message);sid=data.id}
+ const path=`${businessId}/${Date.now()}-${invoiceFile.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;const {error:upErr}=await sb.storage.from('invoice-images').upload(path,invoiceFile);if(upErr)return alert(upErr.message);
+ const total=parseFloat(document.getElementById('invTotal').value.replace(/\./g,'').replace(',','.'))||0;const {error}=await sb.from('invoices').insert({business_id:businessId,supplier_id:sid,invoice_date:new Date().toISOString().slice(0,10),total,image_path:path,status:'confirmed'});if(error)return alert(error.message);
+ document.getElementById('invoiceSaved').innerHTML='<strong>✓ Factura guardada en Supabase</strong><br>'+pname+' · '+money(total);document.getElementById('invoiceSaved').classList.remove('hidden')
 }
-const opts=[['ignorar','Ignorar'],['fecha','Fecha'],['hora','Hora'],['ticket','Ticket'],['producto','Producto'],['cantidad','Cantidad'],['precio','Precio'],['total','Total línea'],['categoria','Categoría']];
-function handleCSV(file){
-  if(!file)return;
-  const r=new FileReader();
-  r.onload=()=>{try{const p=parseCSV(r.result);headers=p.headers;rawRows=p.rows;buildMapping();showImportStep(2);toast('CSV leído')}catch(e){alert('No he podido leerlo: '+e.message)}};
-  r.readAsText(file,'UTF-8')
+function split(line,d){let o=[],c='',q=false;for(let i=0;i<line.length;i++){let x=line[i];if(x==='"')q=!q;else if(x===d&&!q){o.push(c.trim());c=''}else c+=x}o.push(c.trim());return o}
+function parseCSV(text){text=text.replace(/^\uFEFF/,'');const lines=text.split(/\r?\n/).filter(x=>x.trim());const d=(lines[0].split(';').length>lines[0].split(',').length)?';':',';const h=split(lines[0],d);return lines.slice(1).map(l=>Object.fromEntries(h.map((k,i)=>[k,split(l,d)[i]??''])))}
+function pick(r,names){const ks=Object.keys(r);for(const n of names){const k=ks.find(x=>x.toLowerCase().includes(n));if(k)return r[k]}return''}
+function n(v){return parseFloat(String(v||'').replace(/€/g,'').replace(',','.'))||0}
+async function handleCSV(file){
+ if(!file)return;const reader=new FileReader();reader.onload=async()=>{try{const rows=parseCSV(reader.result);const groups={};
+ rows.forEach((r,i)=>{const ticket=pick(r,['ticket','pedido','order'])||'T'+i,product=pick(r,['producto','articulo','item','descripcion'])||'Producto',qty=n(pick(r,['cantidad','qty','uds']))||1,price=n(pick(r,['precio','price','pvp'])),total=n(pick(r,['total','importe']))||qty*price,date=pick(r,['fecha','date'])||new Date().toISOString().slice(0,10);(groups[ticket]||={ticket,date,rows:[],total:0}).rows.push({product,qty,price,total});groups[ticket].total+=total});
+ const existing=await sb.from('products').select('id,name');const map={};(existing.data||[]).forEach(p=>map[p.name.toLowerCase()]=p.id);
+ const names=[...new Set(rows.map(r=>pick(r,['producto','articulo','item','descripcion'])||'Producto'))];for(const name of names)if(!map[name.toLowerCase()]){const {data,error}=await sb.from('products').insert({business_id:businessId,name}).select('id').single();if(error)throw error;map[name.toLowerCase()]=data.id}
+ let count=0;for(const g of Object.values(groups)){const soldAt=new Date(g.date);const {data:sale,error}=await sb.from('sales').insert({business_id:businessId,external_ticket_id:g.ticket,sold_at:isNaN(soldAt)?new Date().toISOString():soldAt.toISOString(),total:g.total,source:'csv'}).select('id').single();if(error)throw error;const items=g.rows.map(x=>({business_id:businessId,sale_id:sale.id,product_id:map[x.product.toLowerCase()]||null,product_name:x.product,quantity:x.qty,unit_price:x.price,line_total:x.total}));const {error:ie}=await sb.from('sale_items').insert(items);if(ie)throw ie;count++}
+ document.getElementById('importStatus').innerHTML='<strong>✓ '+count+' tickets guardados en Supabase</strong>';document.getElementById('importStatus').classList.remove('hidden');await refreshAll();
+ }catch(e){alert('Importación fallida: '+e.message)}};reader.readAsText(file,'UTF-8')
 }
-function loadDemoCSV(){
-  const demo=`fecha,ticket,producto,cantidad,precio
-2026-08-10,T001,Caña,2,2.20
-2026-08-10,T001,Hamburguesa completa,1,12.50
-2026-08-10,T001,Patatas,1,3.50
-2026-08-10,T002,Coca-Cola,2,2.80
-2026-08-10,T002,Bocadillo ternera,2,8.90
-2026-08-11,T003,Caña,5,2.20
-2026-08-11,T003,Hamburguesa completa,3,12.50
-2026-08-11,T003,Patatas,2,3.50`;
-  const p=parseCSV(demo);headers=p.headers;rawRows=p.rows;buildMapping();showImportStep(2);toast('Datos demo cargados')
-}
-function buildMapping(){
-  mapping={};const box=document.getElementById('mappingRows');box.innerHTML='';document.getElementById('rowCount').textContent=rawRows.length+' filas';
-  headers.forEach(h=>{
-    const g=guessField(h);mapping[h]=g;const row=document.createElement('div');row.className='maprow';
-    const a=document.createElement('span');a.textContent=h;const b=document.createElement('b');b.textContent='→';const s=document.createElement('select');
-    opts.forEach(([v,l])=>{const o=document.createElement('option');o.value=v;o.textContent=l;o.selected=v===g;s.appendChild(o)});
-    s.onchange=()=>mapping[h]=s.value;row.append(a,b,s);box.appendChild(row)
-  })
-}
-function showImportStep(n){[1,2,3,4].forEach(i=>{document.getElementById('importStep'+i).classList.toggle('hidden',i!==n);document.getElementById('s'+i).classList.toggle('on',i<=n)});scrollTo({top:0,behavior:'smooth'})}
-function mappedValue(row,f){const h=Object.keys(mapping).find(k=>mapping[k]===f);return h?row[h]:''}
-function goPreview(){
-  if(!Object.values(mapping).includes('producto'))return alert('Marca qué columna es Producto.');
-  if(!Object.values(mapping).includes('precio')&&!Object.values(mapping).includes('total'))return alert('Marca una columna de Precio o Total.');
-  const fields=['fecha','ticket','producto','cantidad','precio','total'],labels={fecha:'Fecha',ticket:'Ticket',producto:'Producto',cantidad:'Cant.',precio:'Precio',total:'Total'};
-  let x='<thead><tr>'+fields.map(f=>'<th>'+labels[f]+'</th>').join('')+'</tr></thead><tbody>';
-  rawRows.slice(0,8).forEach(r=>x+='<tr>'+fields.map(f=>'<td>'+(mappedValue(r,f)||'—')+'</td>').join('')+'</tr>');
-  document.getElementById('previewTable').innerHTML=x+'</tbody>';showImportStep(3)
-}
-function num(v){
-  let s=String(v??'').trim().replace(/\s/g,'').replace(/€/g,'');
-  if(s.includes(',')&&s.includes('.')){if(s.lastIndexOf(',')>s.lastIndexOf('.'))s=s.replace(/\./g,'').replace(',','.');else s=s.replace(/,/g,'')}
-  else if(s.includes(','))s=s.replace(',','.');
-  return parseFloat(s)||0
-}
-function calcSummary(){
-  let sales=0,tickets=new Set(),products={},dates=new Set();
-  rawRows.forEach(r=>{
-    const q=Math.max(1,num(mappedValue(r,'cantidad'))||1), total=num(mappedValue(r,'total'))||num(mappedValue(r,'precio'))*q;
-    sales+=total;const t=mappedValue(r,'ticket');if(t)tickets.add(t);const p=mappedValue(r,'producto')||'Sin nombre';products[p]=(products[p]||0)+q;const d=mappedValue(r,'fecha');if(d)dates.add(d)
-  });
-  const tc=tickets.size||rawRows.length,avg=tc?sales/tc:0,top=Object.entries(products).sort((a,b)=>b[1]-a[1]).slice(0,5);
-  return{rows:rawRows.length,sales,ticketCount:tc,avg,top,days:dates.size}
-}
-function confirmImport(){
-  currentSummary=calcSummary();
-  document.getElementById('sumRows').textContent=currentSummary.rows;document.getElementById('sumSales').textContent=money(currentSummary.sales);document.getElementById('sumTickets').textContent=currentSummary.ticketCount;document.getElementById('sumAvg').textContent=money(currentSummary.avg);
-  document.getElementById('topFinding').innerHTML=`<span class="pill">PRODUCTO TOP</span><h4>${currentSummary.top[0]?.[0]||'—'}</h4><p>${currentSummary.top[0]?.[1]||0} unidades detectadas. Ya podemos usar este dato en el Cerebro y en el Inicio.</p>`;
-  showImportStep(4)
-}
-function applyImportedData(){state.summary=currentSummary;saveState();renderSummaryToHome(currentSummary);showView('inicio');toast('Datos reales aplicados al piloto')}
-function renderSummaryToHome(s){
-  document.getElementById('salesKpi').textContent=money(s.sales);document.getElementById('ticketsKpi').textContent=s.ticketCount;document.getElementById('avgKpi').textContent=money(s.avg);document.getElementById('topKpi').textContent=s.top?.[0]?.[0]||'—';
-  document.getElementById('salesSub').textContent=s.days?`${s.days} días importados`:'CSV importado';document.getElementById('historyText').textContent=`${s.rows} líneas de venta analizadas · ${s.days||'—'} días detectados`;
-  document.getElementById('heroText').textContent=`Ya estamos trabajando con datos importados. El producto más vendido es ${s.top?.[0]?.[0]||'—'} y el ticket medio del periodo es ${money(s.avg)}.`
-}
-function resetImport(){rawRows=[];headers=[];mapping={};currentSummary=null;document.getElementById('csvFile').value='';showImportStep(1)}
-
-function handleInvoiceImage(file){
-  if(!file)return;
-  const url=URL.createObjectURL(file),img=document.getElementById('invoicePreview');img.src=url;img.classList.remove('hidden');document.getElementById('invoiceForm').classList.remove('hidden');toast('Imagen cargada')
-}
-function saveInvoice(){
-  state.lastInvoice={provider:document.getElementById('invProvider').value,total:document.getElementById('invTotal').value,product:document.getElementById('invProduct').value,change:document.getElementById('invChange').value};
-  saveState();
-  document.getElementById('invoiceResultText').textContent=`${state.lastInvoice.product} · ${state.lastInvoice.change}. Factura de ${state.lastInvoice.provider} por ${state.lastInvoice.total}. En la versión real, este paso recalculará costes y stock automáticamente.`;
-  document.getElementById('invoiceResult').classList.remove('hidden');toast('Factura confirmada')
-}
-function quickAsk(q){document.getElementById('brainQuestion').value=q;brainAnswer()}
-function brainAnswer(){
-  const q=document.getElementById('brainQuestion').value.toLowerCase(),a=document.getElementById('brainAnswer'),s=state.summary;
-  let t='';
-  if(!s)t='Todavía no has importado datos reales del TPV. Entra en Más → Importar TPV. Mientras tanto, el resto de la app usa datos de demostración.';
-  else if(q.includes('producto')||q.includes('vendo más')||q.includes('mas'))t=`El producto con más unidades en el archivo importado es ${s.top?.[0]?.[0]||'—'} con ${s.top?.[0]?.[1]||0} unidades. Después aparecen ${(s.top?.slice(1,3).map(x=>x[0]).join(' y ')||'otros productos')}.`;
-  else if(q.includes('cómo')||q.includes('como ha ido')||q.includes('periodo'))t=`He analizado ${s.rows} líneas de venta. La facturación del periodo es ${money(s.sales)}, con ${s.ticketCount} tickets y un ticket medio de ${money(s.avg)}.`;
-  else if(q.includes('mejor')||q.includes('mejorar')||q.includes('pierdo'))t=`Con los datos actuales, empezaría revisando venta cruzada alrededor de ${s.top?.[0]?.[0]||'los productos principales'} y compararía ticket medio por día y franja horaria. Para detectar margen real necesito añadir costes/recetas y facturas.`;
-  else t=`Con el CSV importado tengo ${s.rows} líneas, ${s.ticketCount} tickets, ${money(s.sales)} en ventas y un ticket medio de ${money(s.avg)}. Puedes preguntarme por producto top, rendimiento del periodo o posibles mejoras.`;
-  a.textContent=t;a.classList.remove('hidden')
-}
-restore();
+function brain(){const a=document.getElementById('brainA'),q=document.getElementById('brainQ').value.toLowerCase();let t=dashboard.tickets?`Atlas tiene ${dashboard.tickets} tickets, ${money(dashboard.sales)} en ventas y un ticket medio de ${money(dashboard.avg)}. El producto con más unidades es ${dashboard.top}.`:'Todavía no hay ventas importadas.';if(q.includes('mejor'))t+=' El siguiente paso es cruzar productos con costes, recetas y franjas horarias.';a.textContent=t;a.classList.remove('hidden')}
+boot();
 </script>
-</body>
-</html>
+</body></html>
