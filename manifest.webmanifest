@@ -1,0 +1,10 @@
+{
+  "name": "Segunda Mente",
+  "short_name": "Mente",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0d0e10",
+  "theme_color": "#0d0e10",
+  "description": "Una segunda mente personal, móvil y privada.",
+  "icons": [{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}
