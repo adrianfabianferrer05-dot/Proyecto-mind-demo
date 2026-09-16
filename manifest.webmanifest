@@ -2,9 +2,12 @@
   "name": "Segunda Mente",
   "short_name": "Mente",
   "start_url": "./",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#0d0e10",
-  "theme_color": "#0d0e10",
-  "description": "Una segunda mente personal, móvil y privada.",
-  "icons": [{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+  "background_color": "#0b0c0e",
+  "theme_color": "#0b0c0e",
+  "description": "Tu espacio personal para capturar, ordenar y recordar.",
+  "icons": [
+    {"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
+  ]
 }
