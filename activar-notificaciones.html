@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <meta name="theme-color" content="#0d0e10">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="manifest" href="manifest.webmanifest">
+  <title>Activar notificaciones · Segunda Mente</title>
+  <style>
+    :root{--bg:#0d0e10;--card:#17191e;--ink:#f7f5f0;--muted:#9b9ca3;--line:rgba(255,255,255,.08);--accent:#d7ff64;--danger:#ff8d8d;--ok:#78e7a5}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;background:#0d0e10;color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;min-height:100%}body{background:radial-gradient(circle at 50% -5%,#24282f 0,#111317 38%,var(--bg) 72%)}.wrap{width:min(100%,540px);min-height:100vh;margin:auto;padding:calc(env(safe-area-inset-top) + 24px) 18px calc(env(safe-area-inset-bottom) + 28px);display:flex;flex-direction:column}.brand{display:flex;align-items:center;gap:8px;font-weight:800;font-size:13px}.dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 18px #d7ff6488}.hero{flex:1;display:flex;flex-direction:column;justify-content:center;padding:28px 0}.orbwrap{height:190px;display:grid;place-items:center;position:relative}.halo{position:absolute;width:160px;height:160px;border-radius:50%;background:#d7ff641c;filter:blur(30px);animation:breathe 2.8s ease-in-out infinite}.orb{width:112px;height:112px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 34% 28%,#eefdb2,#d7ff64 20%,#6e7f35 72%,#252b16);box-shadow:inset -18px -20px 40px #0005,0 0 0 12px #d7ff640b,0 24px 60px #0008;color:#111;font-size:38px;font-weight:900}.eyebrow{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:800;margin-bottom:10px}h1{font-size:42px;line-height:.96;letter-spacing:-.055em;margin:0 0 14px}.sub{color:var(--muted);font-size:14px;line-height:1.55;margin-bottom:20px}.card{border:1px solid var(--line);background:rgba(23,25,30,.88);backdrop-filter:blur(18px);border-radius:24px;padding:18px}.field{display:grid;gap:8px}.field label{font-size:11px;color:var(--muted);font-weight:800;letter-spacing:.08em}.field input{width:100%;border:1px solid var(--line);background:#101216;color:var(--ink);border-radius:16px;padding:15px 14px;font-size:16px;outline:none}.field input:focus{border-color:#d7ff6470}.btn{width:100%;border:0;border-radius:17px;padding:16px;margin-top:12px;background:var(--accent);color:#111;font:inherit;font-size:14px;font-weight:850}.btn:disabled{opacity:.55}.status{min-height:42px;margin-top:12px;border-radius:14px;padding:11px 12px;background:#ffffff08;color:var(--muted);font-size:12px;line-height:1.4}.status.ok{color:var(--ok);background:#78e7a510}.status.err{color:var(--danger);background:#ff8d8d10}.note{font-size:11px;color:#74767e;line-height:1.45;margin-top:12px;text-align:center}@keyframes breathe{50%{transform:scale(1.14);opacity:.7}}@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="brand"><span class="dot"></span>Segunda Mente</div>
+    <section class="hero">
+      <div class="orbwrap"><div class="halo"></div><div class="orb">⌁</div></div>
+      <div class="eyebrow">iPhone · Web Push</div>
+      <h1>Que tu mente<br>te avise.</h1>
+      <div class="sub">Activa una vez las notificaciones. Después Segunda Mente podrá avisarte aunque la app esté cerrada.</div>
+      <div class="card">
+        <div class="field">
+          <label for="code">CÓDIGO DE ACTIVACIÓN</label>
+          <input id="code" type="text" inputmode="text" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Pega aquí el código temporal">
+        </div>
+        <button id="activate" class="btn">Activar notificaciones</button>
+        <div id="status" class="status">Abre esta pantalla desde el icono de Segunda Mente de tu pantalla de inicio.</div>
+      </div>
+      <div class="note">El código es de un solo uso. La clave privada de notificaciones no se guarda en el iPhone ni en GitHub.</div>
+    </section>
+  </main>
+<script>
+const PUSH_URL='https://dabzmzwnvzoeywyflkoo.supabase.co/functions/v1/push';
+const $=id=>document.getElementById(id);
+const button=$('activate'),statusEl=$('status'),codeEl=$('code');
+function status(text,type=''){statusEl.textContent=text;statusEl.className='status'+(type?' '+type:'')}
+function b64ToUint8Array(base64String){const padding='='.repeat((4-base64String.length%4)%4);const base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');const raw=atob(base64);return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)))}
+function isStandalone(){return window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true}
+async function markRegistered(){const reg=await navigator.serviceWorker.ready;const target=reg.active||navigator.serviceWorker.controller;if(target)target.postMessage({type:'PUSH_REGISTERED'})}
+async function activate(){
+  const code=codeEl.value.trim();
+  if(!code){status('Pega primero el código temporal de activación.','err');codeEl.focus();return}
+  if(!isStandalone()){status('Ábrelo desde el icono de Segunda Mente de la pantalla de inicio, no desde Safari.','err');return}
+  if(!('serviceWorker'in navigator)&&!('Notification'in window)){status('Este navegador no admite las notificaciones necesarias.','err');return}
+  if(!('PushManager'in window)){status('Web Push no está disponible en este dispositivo.','err');return}
+  button.disabled=true;status('Preparando notificaciones…');
+  try{
+    await navigator.serviceWorker.register('./sw.js');
+    const permission=await Notification.requestPermission();
+    if(permission!=='granted'){throw new Error(permission==='denied'?'Has rechazado el permiso de notificaciones. Puedes cambiarlo en Ajustes del iPhone.':'No se concedió el permiso de notificaciones.')}
+    const configRes=await fetch(PUSH_URL,{method:'GET',headers:{'Accept':'application/json'}});
+    const config=await configRes.json();
+    if(!configRes.ok||!config.publicKey)throw new Error('No pude obtener la configuración de notificaciones.')
+    const reg=await navigator.serviceWorker.ready;
+    let subscription=await reg.pushManager.getSubscription();
+    if(!subscription){subscription=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64ToUint8Array(config.publicKey)})}
+    status('Registrando este iPhone…');
+    const res=await fetch(PUSH_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'subscribe',code,subscription:subscription.toJSON()})});
+    const out=await res.json().catch(()=>({}));
+    if(!res.ok||!out.ok)throw new Error(out.error==='invalid_or_expired_code'?'El código ha caducado o ya se usó.':out.detail||'No pude registrar este iPhone.')
+    await markRegistered();
+    status('Activadas ✓ Te acabo de enviar una notificación de prueba.','ok');
+    codeEl.value='';
+    setTimeout(()=>location.replace('./'),1800);
+  }catch(err){status(err?.message||'No pude activar las notificaciones.','err');button.disabled=false}
+}
+button.addEventListener('click',activate);
+if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+</script>
+</body>
+</html>
