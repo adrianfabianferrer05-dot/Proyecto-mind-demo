@@ -4,9 +4,9 @@
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#0b0c0e",
-  "theme_color": "#0b0c0e",
-  "description": "Tu espacio personal para capturar, ordenar y recordar.",
+  "background_color": "#090a0c",
+  "theme_color": "#090a0c",
+  "description": "Tu espacio privado para soltar, recordar y ordenar lo importante.",
   "icons": [
     {"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
   ]
