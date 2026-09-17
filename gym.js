@@ -35,7 +35,7 @@ function installGym(){
   view.id='gym';view.className='view gym-view';
   view.innerHTML=`
     <div class="gym-head"><div class="gym-kicker">ENTRENO</div><h1>Fuerte,<br>sin libreta.</h1><p>Tu rutina, tus series y tus pesos. Apuntar una serie debe tardar segundos.</p></div>
-    <div class="gym-tabs" role="tablist" aria-label="Gimnasio"><button class="gym-tab active" data-gym-tab="routine">Rutina</button><button class="gym-tab" data-gym-tab="history">Historial</button><button class="gym-tab" data-gym-tab="body">Peso</button></div>
+    <div class="gym-tabs" role="tablist" aria-label="Gimnasio"><button class="gym-tab active" data-gym-tab="routine">Rutina</button><button class="gym-tab" data-gym-tab="history">Historial</button><button class="gym-tab" data-gym-tab="body">Cuerpo</button></div>
     <div id="gymContent"><div class="gym-empty"><b>Cargando…</b>Recuperando tu rutina.</div></div>
     <div class="gym-rest" id="gymRest"><div class="gym-rest-ring" id="gymRestTime">0:00</div><div class="gym-rest-copy"><b>Descanso</b><span id="gymRestLabel">Recupera y sigue.</span></div><button data-gym-action="rest-add">+30s</button><button data-gym-action="rest-skip">Saltar</button></div>
     <div class="gym-sheet" id="gymSheet" aria-hidden="true"><div class="gym-sheet-panel"><div class="gym-sheet-grab"></div><div id="gymSheetBody"></div></div></div>
