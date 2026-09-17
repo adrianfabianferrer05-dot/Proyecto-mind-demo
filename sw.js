@@ -1,4 +1,4 @@
-const CACHE='segunda-mente-v4';
+const CACHE='segunda-mente-v5';
 const STATE_CACHE='segunda-mente-state-v1';
 const PUSH_MARKER='./__push_registered__';
 const ASSETS=['./','./index.html','./app.css','./app.js','./activar-notificaciones.html','./manifest.webmanifest','./icon.svg'];
