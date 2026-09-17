@@ -1,10 +1,98 @@
 <!doctype html>
-<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><meta name="theme-color" content="#090a0c"><title>Conectar OpenAI · Segunda Mente</title><style>
-:root{--bg:#090a0c;--panel:#111417;--text:#f4f2ed;--muted:#8e9499;--signal:#caff58}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% 10%,rgba(202,255,88,.07),transparent 30%),var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,sans-serif;min-height:100dvh;padding:calc(env(safe-area-inset-top) + 26px) 18px calc(env(safe-area-inset-bottom) + 30px)}.wrap{max-width:480px;margin:0 auto}.brand{font-size:11px;letter-spacing:.08em;color:var(--muted);margin-bottom:48px}.orb{width:54px;height:54px;border-radius:50%;border:1px solid rgba(202,255,88,.28);box-shadow:0 0 30px rgba(202,255,88,.08),inset 0 0 18px rgba(202,255,88,.04);display:grid;place-items:center;margin-bottom:24px}.orb:after{content:'';width:10px;height:10px;border-radius:50%;background:var(--signal);box-shadow:0 0 20px rgba(202,255,88,.8)}h1{font-family:Georgia,"Times New Roman",serif;font-size:48px;line-height:.95;letter-spacing:-.045em;margin:0 0 14px}p{font-size:13px;line-height:1.55;color:var(--muted);margin:0 0 24px}.card{background:linear-gradient(180deg,rgba(18,21,24,.94),rgba(12,14,16,.97));border:1px solid rgba(255,255,255,.07);border-radius:24px;padding:16px}.label{font-size:10px;color:var(--muted);margin-bottom:8px}.input{width:100%;background:#0b0d0f;color:var(--text);border:1px solid rgba(255,255,255,.1);border-radius:15px;padding:14px 13px;font:inherit;font-size:13px;outline:none}.input:focus{border-color:rgba(202,255,88,.42);box-shadow:0 0 0 3px rgba(202,255,88,.07)}button{width:100%;margin-top:10px;border:0;border-radius:15px;min-height:48px;background:var(--signal);color:#0a0c0e;font:inherit;font-size:12px;font-weight:800}button:disabled{opacity:.45}.status{min-height:18px;margin-top:12px;font-size:11px;color:var(--muted);line-height:1.45}.status.ok{color:var(--signal)}.note{font-size:10px;line-height:1.5;color:var(--muted);margin-top:18px;padding:0 3px}.done{display:none}.done.show{display:block}.form.hide{display:none}.back{display:inline-block;color:var(--muted);font-size:11px;margin-top:18px;text-decoration:none}
-</style></head><body><div class="wrap"><div class="brand">SEGUNDA MENTE · CONFIGURACIÓN PRIVADA</div><div class="orb"></div><h1>Conectar<br>OpenAI.</h1><p>Solo tienes que pegar una API key una vez. La clave se valida con OpenAI y se guarda cifrada en el servidor de Segunda Mente; no se conserva en este iPhone.</p><div class="card"><div class="form" id="form"><div class="label">API KEY</div><input class="input" id="key" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="sk-…"><button id="save">Validar y conectar</button><div class="status" id="status"></div></div><div class="done" id="done"><div class="status ok">✓ OpenAI está conectado. Segunda Mente ya puede interpretar tus capturas con la capa avanzada.</div></div></div><div class="note">No pegues la clave en ningún chat. Esta pantalla la envía directamente desde tu dispositivo al backend privado de Segunda Mente.</div><a class="back" href="./">← Volver a Segunda Mente</a></div><script>
-const URL='https://dabzmzwnvzoeywyflkoo.supabase.co/functions/v1/mind-config',TOKEN_KEY='sm_device_token';
-const $=id=>document.getElementById(id),token=()=>localStorage.getItem(TOKEN_KEY)||'';
-async function call(method='GET',body){const t=token();if(!t)throw new Error('Abre esta página desde el mismo iPhone donde tienes Segunda Mente vinculada.');const r=await fetch(URL,{method,cache:'no-store',headers:{Authorization:`Bearer ${t}`,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});const out=await r.json().catch(()=>({}));if(!r.ok)throw new Error(out.detail||out.error||'No se pudo conectar');return out}
-async function check(){try{const out=await call();if(out.aiEnabled){$('form').classList.add('hide');$('done').classList.add('show')}}catch(e){$('status').textContent=e.message}}
-$('save').onclick=async()=>{const key=$('key').value.trim();if(key.length<20){$('status').textContent='Pega la clave completa.';return}$('save').disabled=true;$('status').className='status';$('status').textContent='Validando con OpenAI…';try{await call('POST',{action:'set_openai_key',key});$('key').value='';$('form').classList.add('hide');$('done').classList.add('show')}catch(e){$('status').textContent=e.message}finally{$('save').disabled=false}};check();
-</script></body></html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#090a0c">
+<title>Conectar OpenAI · Segunda Mente</title>
+<style>
+:root{--bg:#090a0c;--panel:#111417;--text:#f4f2ed;--muted:#8e9499;--signal:#caff58;--danger:#ff8a8a}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% 10%,rgba(202,255,88,.07),transparent 30%),var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,sans-serif;min-height:100dvh;padding:calc(env(safe-area-inset-top) + 26px) 18px calc(env(safe-area-inset-bottom) + 30px)}.wrap{max-width:480px;margin:0 auto}.brand{font-size:11px;letter-spacing:.08em;color:var(--muted);margin-bottom:48px}.orb{width:54px;height:54px;border-radius:50%;border:1px solid rgba(202,255,88,.28);box-shadow:0 0 30px rgba(202,255,88,.08),inset 0 0 18px rgba(202,255,88,.04);display:grid;place-items:center;margin-bottom:24px}.orb:after{content:'';width:10px;height:10px;border-radius:50%;background:var(--signal);box-shadow:0 0 20px rgba(202,255,88,.8)}h1{font-family:Georgia,"Times New Roman",serif;font-size:48px;line-height:.95;letter-spacing:-.045em;margin:0 0 14px}p{font-size:13px;line-height:1.55;color:var(--muted);margin:0 0 24px}.card{background:linear-gradient(180deg,rgba(18,21,24,.94),rgba(12,14,16,.97));border:1px solid rgba(255,255,255,.07);border-radius:24px;padding:16px}.label{font-size:10px;color:var(--muted);margin-bottom:8px}.input{width:100%;background:#0b0d0f;color:var(--text);border:1px solid rgba(255,255,255,.1);border-radius:15px;padding:14px 13px;font:inherit;font-size:13px;outline:none}.input:focus{border-color:rgba(202,255,88,.42);box-shadow:0 0 0 3px rgba(202,255,88,.07)}button{width:100%;margin-top:10px;border:0;border-radius:15px;min-height:48px;background:var(--signal);color:#0a0c0e;font:inherit;font-size:12px;font-weight:800;-webkit-tap-highlight-color:transparent;touch-action:manipulation}button:disabled{opacity:.55}.status{min-height:22px;margin-top:12px;font-size:11px;color:var(--muted);line-height:1.45}.status.ok{color:var(--signal)}.status.err{color:var(--danger)}.note{font-size:10px;line-height:1.5;color:var(--muted);margin-top:18px;padding:0 3px}.done{display:none}.done.show{display:block}.form.hide{display:none}.back{display:inline-block;color:var(--muted);font-size:11px;margin-top:18px;text-decoration:none}.device{font-size:10px;color:var(--muted);margin:0 0 10px}.device.ok{color:var(--signal)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">SEGUNDA MENTE · CONFIGURACIÓN PRIVADA</div>
+  <div class="orb"></div>
+  <h1>Conectar<br>OpenAI.</h1>
+  <p>Solo tienes que pegar una API key una vez. La clave se valida con OpenAI y se guarda cifrada en el servidor de Segunda Mente; no se conserva en este iPhone.</p>
+  <div class="card">
+    <form class="form" id="form" novalidate>
+      <div class="device" id="device">Comprobando este iPhone…</div>
+      <div class="label">API KEY</div>
+      <input class="input" id="key" name="key" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="sk-…">
+      <button id="save" type="submit">Validar y conectar</button>
+      <div class="status" id="status" role="status" aria-live="polite"></div>
+    </form>
+    <div class="done" id="done"><div class="status ok">✓ OpenAI está conectado. Segunda Mente ya puede interpretar tus capturas con la capa avanzada.</div></div>
+  </div>
+  <div class="note">No pegues la clave en ningún chat. Esta pantalla la envía directamente desde tu dispositivo al backend privado de Segunda Mente.</div>
+  <a class="back" href="./">← Volver a Segunda Mente</a>
+</div>
+<script>
+(function(){
+  'use strict';
+  var CONFIG_URL='https://dabzmzwnvzoeywyflkoo.supabase.co/functions/v1/mind-config';
+  var TOKEN_KEY='sm_device_token';
+  var form=document.getElementById('form');
+  var keyInput=document.getElementById('key');
+  var save=document.getElementById('save');
+  var status=document.getElementById('status');
+  var device=document.getElementById('device');
+  var done=document.getElementById('done');
+
+  function token(){try{return localStorage.getItem(TOKEN_KEY)||''}catch(e){return''}}
+  function setStatus(text,kind){status.textContent=text||'';status.className='status'+(kind?' '+kind:'')}
+
+  async function call(method,body){
+    var t=token();
+    if(!t)throw new Error('Este navegador no tiene la sesión de Segunda Mente. Abre esta pantalla desde tu iPhone vinculado.');
+    var controller=new AbortController();
+    var timer=setTimeout(function(){controller.abort()},20000);
+    try{
+      var response=await fetch(CONFIG_URL,{method:method||'GET',cache:'no-store',signal:controller.signal,headers:{'Authorization':'Bearer '+t,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
+      var out=await response.json().catch(function(){return{}});
+      if(!response.ok)throw new Error(out.detail||out.error||'No se pudo conectar');
+      return out;
+    }finally{clearTimeout(timer)}
+  }
+
+  async function check(){
+    if(!token()){
+      device.textContent='⚠ Falta la sesión de este iPhone';
+      setStatus('Abre Segunda Mente una vez en este iPhone y vuelve a esta pantalla.','err');
+      return;
+    }
+    try{
+      var out=await call('GET');
+      device.textContent='✓ Este iPhone está vinculado';
+      device.className='device ok';
+      if(out.aiEnabled){form.classList.add('hide');done.classList.add('show')}
+    }catch(e){device.textContent='⚠ No pude validar la sesión';setStatus(e.message,'err')}
+  }
+
+  form.addEventListener('submit',async function(event){
+    event.preventDefault();
+    var key=keyInput.value.trim();
+    if(key.length<20){setStatus('Pega la clave completa.','err');keyInput.focus();return}
+    save.disabled=true;
+    save.textContent='Validando…';
+    setStatus('Contactando con OpenAI…','');
+    try{
+      await call('POST',{action:'set_openai_key',key:key});
+      keyInput.value='';
+      form.classList.add('hide');
+      done.classList.add('show');
+    }catch(e){
+      setStatus(e.name==='AbortError'?'La validación ha tardado demasiado. Pulsa otra vez.':e.message,'err');
+    }finally{
+      save.disabled=false;
+      save.textContent='Validar y conectar';
+    }
+  });
+
+  window.addEventListener('error',function(){setStatus('Ha fallado la pantalla de conexión. Recárgala e inténtalo otra vez.','err')});
+  check();
+})();
+</script>
+</body>
+</html>
