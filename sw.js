@@ -1,7 +1,7 @@
-const CACHE='segunda-mente-v6';
+const CACHE='segunda-mente-v7';
 const STATE_CACHE='segunda-mente-state-v1';
 const PUSH_MARKER='./__push_registered__';
-const ASSETS=['./','./index.html','./app.css?v=7','./app-polish.css?v=7','./app.js?v=7','./app-enhance.js?v=7','./gym.css?v=1','./gym.js?v=1','./activar-notificaciones.html','./manifest.webmanifest','./icon.svg'];
+const ASSETS=['./','./index.html','./app.css?v=7','./app-polish.css?v=7','./app.js?v=7','./app-enhance.js?v=7','./gym.css?v=1','./gym-enhance.css?v=1','./gym.js?v=1','./gym-enhance.js?v=1','./activar-notificaciones.html','./manifest.webmanifest','./icon.svg'];
 
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting()));
