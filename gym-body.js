@@ -243,7 +243,7 @@
      fully built one lands exactly on the app's signal lime. */
   function massGradient(key,level){
     const k=Math.pow(clamp(level,0,100)/100,.6);
-    const s=40+58*k,l=11+55*k;
+    const s=32+66*k,l=9+57*k;
     const c=(dl,ds)=>`hsl(76, ${Math.round(Math.min(100,s+ds))}%, ${Math.round(Math.max(4,l+dl))}%)`;
     return `<linearGradient id="bpM-${key}" x1="0" y1="0" x2="0" y2="1">`
       +`<stop offset="0" stop-color="${c(13,-8)}"/><stop offset=".48" stop-color="${c(0,0)}"/><stop offset="1" stop-color="${c(-9,2)}"/></linearGradient>`;
@@ -252,41 +252,44 @@
   function lightVars(key,level,index){
     const t=clamp(level,0,100)/100;
     return `--mf:url(#bpM-${key});`
-      +`--sc:${(.955+t*.07).toFixed(4)};`                  // a subtle gain in volume
-      +`--def:${Math.max(0,(level-38)/62).toFixed(3)};`    // separations only once it is built
+      +`--sc:1;`
       +`--glow:${(.6+t*5).toFixed(2)}px;`                  // halo in viewBox units
       +`--lvl:${level.toFixed(1)};--i:${index||0}`;
   }
 
   function figure(model){
     const a=A();if(!a)return '';
-    const shell=a.both(a.SHELL);
-    const layers=a.ORDER.map((key,i)=>{
-      const m=a.MUSCLES[key];
-      return `<g class="bp-group" data-group="${key}" style="${lightVars(key,model.groups[key].level,i)}">`
-        +a.both(m.mass,'bp-mass')+a.both(m.def,'bp-def')+a.once(m.mid,'bp-def')+`</g>`;
-    }).join('');
-    return `<svg class="bp-figure" viewBox="0 0 260 600" preserveAspectRatio="xMidYMid meet" role="img"
-      aria-label="Silueta corporal: cada zona se ilumina según tu propio progreso de fuerza">
+    const levels={};for(const k of a.ORDER)levels[k]=model.groups[k].level;
+    const body=a.build(levels);                       // la silueta se ensancha con el progreso
+    const shell=a.both(body.shell);
+    const layers=a.ORDER.map((key,i)=>
+      `<g class="bp-group" data-group="${key}" style="${lightVars(key,model.groups[key].level,i)}">`
+      +a.whole(body.muscles[key].mass,'bp-mass')+`</g>`).join('');
+    return `<svg class="bp-figure" viewBox="0 0 300 620" preserveAspectRatio="xMidYMid meet" role="img"
+      aria-label="Silueta corporal: cada zona se ilumina y crece según tu propio progreso de fuerza">
       ${gradients('bp',a.ORDER.map(k=>massGradient(k,model.groups[k].level)).join(''))}
-      <defs><clipPath id="bpClip">${a.flat(a.SHELL)}</clipPath></defs>
+      <defs><clipPath id="bpClip">${a.flat(body.shell)}</clipPath></defs>
       <g class="bp-edge">${shell}</g>
       <g class="bp-shell">${shell}</g>
       <g class="bp-muscles" clip-path="url(#bpClip)">${layers}</g>
-      <g class="bp-detail">${a.both(a.DETAIL)}</g>
-      <g class="bp-sweep" clip-path="url(#bpClip)" aria-hidden="true"><rect x="0" y="0" width="260" height="190" fill="url(#bpSweepFill)"/></g>
-      <g class="bp-hit" aria-hidden="true">${a.ORDER.map(k=>`<g data-bp-zone="${k}">${a.both(a.MUSCLES[k].mass)}</g>`).join('')}</g>
+      <g class="bp-detail">${a.both(body.detail)}</g>
+      <g class="bp-sweep" clip-path="url(#bpClip)" aria-hidden="true"><rect x="0" y="0" width="300" height="200" fill="url(#bpSweepFill)"/></g>
+      <g class="bp-hit" aria-hidden="true">${a.ORDER.map(k=>`<g data-bp-zone="${k}">${a.whole(body.muscles[k].mass)}</g>`).join('')}</g>
     </svg>`;
   }
 
-  /* The same crop of the same body, so a card's icon is literally its zone. */
+  /* El mismo cuerpo, recortado: el icono de una tarjeta es literalmente su zona.
+     Se construye siempre a tamaño completo para que el encuadre no baile con el
+     progreso; lo que cambia con el nivel es el color, igual que en la silueta. */
+  const FULL={};
   function thumb(key,g){
     const a=A();if(!a)return '';
-    const m=a.MUSCLES[key];
-    return `<svg class="bp-thumb" viewBox="${m.thumb}" aria-hidden="true" style="${lightVars('t-'+key,g.level)}">
-      <defs>${massGradient('t-'+key,g.level)}<clipPath id="bpClipT${key}">${a.flat(a.SHELL)}</clipPath>${shellGradient('bpT'+key)}</defs>
-      <g class="bp-shell" style="--shell:url(#bpT${key}ShellFill)">${a.both(a.SHELL)}</g>
-      <g clip-path="url(#bpClipT${key})"><g class="bp-group">${a.both(m.mass,'bp-mass')}</g></g>
+    if(!FULL.body){const l={};for(const k of a.ORDER)l[k]=100;FULL.body=a.build(l)}
+    const body=FULL.body;
+    return `<svg class="bp-thumb" viewBox="${body.muscles[key].thumb}" aria-hidden="true" style="${lightVars('t-'+key,g.level)}">
+      <defs>${massGradient('t-'+key,g.level)}${shellGradient('bpT'+key)}<clipPath id="bpClipT${key}">${a.flat(body.shell)}</clipPath></defs>
+      <g class="bp-shell" style="--shell:url(#bpT${key}ShellFill)">${a.both(body.shell)}</g>
+      <g clip-path="url(#bpClipT${key})"><g class="bp-group">${a.whole(body.muscles[key].mass,'bp-mass')}</g></g>
     </svg>`;
   }
 
