@@ -1,0 +1,46 @@
+:root{
+  --bg:#090a0c;
+  --bg-soft:#0e1014;
+  --surface:#13161a;
+  --surface-2:#181c21;
+  --surface-3:#1e2329;
+  --ink:#f1efe8;
+  --muted:#92969f;
+  --dim:#666b74;
+  --line:rgba(241,239,232,.095);
+  --line-strong:rgba(241,239,232,.15);
+  --signal:#caff58;
+  --signal-ink:#11150b;
+  --violet:#8580bd;
+  --good:#83e5ae;
+  --warn:#e9bf78;
+  --danger:#ff8f8f;
+  --display:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --body:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;
+  --ease-out:cubic-bezier(.23,1,.32,1);
+  --ease-in-out:cubic-bezier(.77,0,.175,1);
+  --ease-drawer:cubic-bezier(.32,.72,0,1);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{background:var(--bg);color-scheme:dark;scrollbar-color:#2b3036 transparent}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink);font-family:var(--body);overflow-x:hidden}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-2;background:radial-gradient(720px 520px at 62% -150px,rgba(133,128,189,.13),transparent 58%),radial-gradient(540px 460px at -100px 32%,rgba(202,255,88,.055),transparent 60%)}
+body:after{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opacity:.22;background-image:linear-gradient(rgba(255,255,255,.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.009) 1px,transparent 1px);background-size:24px 24px;mask-image:linear-gradient(to bottom,#000,transparent 58%)}
+button,input,textarea{font:inherit;color:inherit}button{touch-action:manipulation}button:disabled{cursor:not-allowed}
+::selection{background:rgba(202,255,88,.25);color:var(--ink)}
+:focus-visible{outline:2px solid var(--signal);outline-offset:3px}
+input,textarea{caret-color:var(--signal)}
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-thumb{background:#30353c;border-radius:20px}::-webkit-scrollbar-track{background:transparent}
+.app{width:min(100%,600px);min-height:100vh;margin:0 auto;padding:calc(env(safe-area-inset-top) + 10px) 20px calc(108px + env(safe-area-inset-bottom));position:relative}
+.topbar{height:54px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.identity{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:760;letter-spacing:-.015em}
+.mark{width:27px;height:27px;display:grid;place-items:center;color:var(--signal);filter:drop-shadow(0 0 12px rgba(202,255,88,.13))}
+.mark svg{width:27px;height:27px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;overflow:visible}
+.mark .trace{stroke-dasharray:54;stroke-dashoffset:54;animation:drawMark 640ms var(--ease-out) 100ms forwards}
+@keyframes drawMark{to{stroke-dashoffset:0}}
+.top-actions{display:flex;align-items:center;gap:5px}
+.statusline{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:11px;min-height:44px;padding:0 5px}
+.statusdot{width:6px;height:6px;border-radius:50%;background:var(--good);box-shadow:0 0 0 4px rgba(131,229,174,.06)}
+.statusdot.offline{background:var(--warn);box-shadow:0 0 0 4px rgba(233,191,120,.06)}
+.statusdot.syncing{background:var(--signal);animation:syncPulse 900ms ease-in-out infinite}
+@keyframes syncPulse{50%{opacity:.35}}
