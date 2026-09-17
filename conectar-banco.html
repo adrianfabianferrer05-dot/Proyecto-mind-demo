@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#090a0c">
+<title>Conectar banco · Segunda Mente</title>
+<style>
+:root{--bg:#090a0c;--panel:#111417;--text:#f4f2ed;--muted:#8e9499;--signal:#caff58;--danger:#ff8a8a}*{box-sizing:border-box}body{margin:0;min-height:100dvh;padding:calc(env(safe-area-inset-top) + 24px) 17px calc(env(safe-area-inset-bottom) + 34px);background:radial-gradient(circle at 50% 8%,rgba(202,255,88,.065),transparent 28%),var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,sans-serif}.wrap{max-width:500px;margin:0 auto}.brand{font-size:10px;letter-spacing:.09em;color:var(--muted);margin-bottom:38px}.orb{width:52px;height:52px;border:1px solid rgba(202,255,88,.25);border-radius:50%;display:grid;place-items:center;margin-bottom:22px;box-shadow:0 0 30px rgba(202,255,88,.06)}.orb:after{content:'';width:10px;height:10px;background:var(--signal);border-radius:50%;box-shadow:0 0 17px rgba(202,255,88,.75)}h1{font-family:Georgia,"Times New Roman",serif;font-size:45px;line-height:.96;letter-spacing:-.045em;margin:0 0 13px}p{font-size:12px;line-height:1.55;color:var(--muted);margin:0 0 22px}.card{background:linear-gradient(180deg,rgba(18,21,24,.95),rgba(12,14,16,.98));border:1px solid rgba(255,255,255,.07);border-radius:23px;padding:15px;margin:0 0 12px}.step{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--signal);margin-bottom:8px}.title{font-size:15px;font-weight:750;margin-bottom:5px}.small{font-size:10px;line-height:1.5;color:var(--muted)}.input{width:100%;background:#0b0d0f;color:var(--text);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:13px 12px;font:inherit;font-size:12px;outline:none;margin-top:8px}.input:focus{border-color:rgba(202,255,88,.42);box-shadow:0 0 0 3px rgba(202,255,88,.06)}button,.primary-link{width:100%;min-height:47px;border:0;border-radius:14px;margin-top:10px;background:var(--signal);color:#090b0c;font:inherit;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;text-decoration:none;-webkit-tap-highlight-color:transparent}button.secondary,.secondary-link{background:#171a1d;color:#e8e6e1;border:1px solid rgba(255,255,255,.08)}button:disabled{opacity:.5}.status{min-height:18px;margin-top:10px;font-size:10px;color:var(--muted);line-height:1.45}.status.ok{color:var(--signal)}.status.err{color:var(--danger)}.hidden{display:none!important}.banks{display:grid;gap:7px;margin-top:10px}.bank{width:100%;margin:0;min-height:54px;background:#0d0f11;color:var(--text);border:1px solid rgba(255,255,255,.065);padding:9px 11px;display:flex;align-items:center;justify-content:flex-start;gap:10px;text-align:left}.bank img{width:30px;height:30px;object-fit:contain;border-radius:8px;background:#fff}.bank span{font-size:11px}.connected{padding:10px 0}.connected strong{display:block;font-size:15px;margin-bottom:5px}.account{padding:10px 0;border-top:1px solid rgba(255,255,255,.06);font-size:11px}.account b{display:block;margin-bottom:3px}.account em{font-style:normal;color:var(--muted);font-size:9px}.back{display:inline-block;color:var(--muted);font-size:10px;margin-top:14px;text-decoration:none}.note{font-size:9px;color:#737b80;line-height:1.5;margin:16px 3px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">SEGUNDA MENTE · BANCA PRIVADA</div>
+  <div class="orb"></div>
+  <h1>Conectar<br>tu banco.</h1>
+  <p>Segunda Mente usará Open Banking PSD2 en modo lectura para importar saldo y movimientos. Tus claves de Cajamar no pasan por esta app.</p>
+
+  <section class="card" id="providerCard">
+    <div class="step">Paso 1</div>
+    <div class="title">Activar el puente bancario</div>
+    <div class="small">Crea dos credenciales de Bank Account Data en GoCardless. Las pegaremos una sola vez y se guardarán cifradas en Supabase Vault.</div>
+    <a class="primary-link" href="https://bankaccountdata.gocardless.com/" target="_blank" rel="noopener">Abrir GoCardless</a>
+    <input class="input" id="secretId" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Secret ID">
+    <input class="input" id="secretKey" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Secret Key">
+    <button id="saveSecrets">Validar y guardar</button>
+    <div class="status" id="providerStatus"></div>
+  </section>
+
+  <section class="card hidden" id="bankCard">
+    <div class="step">Paso 2</div>
+    <div class="title">Elegir Cajamar</div>
+    <div class="small">Busca tu entidad. Al tocarla saldrás a la autenticación oficial del banco y volverás aquí al terminar.</div>
+    <input class="input" id="bankSearch" type="search" value="Cajamar" placeholder="Buscar banco">
+    <div class="banks" id="banks"></div>
+    <div class="status" id="bankStatus"></div>
+  </section>
+
+  <section class="card hidden" id="connectedCard">
+    <div class="step">Conectado</div>
+    <div class="connected" id="connected"></div>
+    <button class="secondary" id="syncBank">Actualizar movimientos</button>
+  </section>
+
+  <div class="note">Solo lectura: Segunda Mente no inicia pagos ni puede mover dinero. Puedes revocar el consentimiento desde tu banca electrónica.</div>
+  <a class="back" href="./">← Volver a Segunda Mente</a>
+</div>
+<script>
+(function(){
+'use strict';
+var CFG='https://dabzmzwnvzoeywyflkoo.supabase.co/functions/v1/bank-config';
+var BANK='https://dabzmzwnvzoeywyflkoo.supabase.co/functions/v1/bank';
+var TOKEN='sm_device_token';
+var institutions=[];
+function t(){try{return localStorage.getItem(TOKEN)||''}catch(e){return''}}
+function status(id,text,kind){var el=document.getElementById(id);el.textContent=text||'';el.className='status'+(kind?' '+kind:'')}
+async function call(url,body,method){
+  var token=t();if(!token)throw new Error('Abre esta página desde el iPhone donde usas Segunda Mente.');
+  var r=await fetch(url,{method:method||'POST',cache:'no-store',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
+  var out=await r.json().catch(function(){return{}});
+  if(!r.ok)throw new Error(out.detail||out.error||'No pude continuar');
+  return out;
+}
+function show(id,on){document.getElementById(id).classList.toggle('hidden',!on)}
+function renderBanks(){
+  var q=document.getElementById('bankSearch').value.trim().toLowerCase(),box=document.getElementById('banks');
+  var list=institutions.filter(function(x){return !q||String(x.name).toLowerCase().includes(q)}).slice(0,12);
+  if(!list.length){box.innerHTML='<div class="small">No aparece ninguna entidad con ese nombre.</div>';return}
+  box.innerHTML=list.map(function(x){return '<button class="bank" data-bank="'+String(x.id).replace(/"/g,'&quot;')+'">'+(x.logo?'<img src="'+x.logo+'" alt="">':'')+'<span>'+String(x.name).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})+'</span></button>'}).join('');
+}
+async function loadBanks(){
+  status('bankStatus','Buscando bancos españoles…','');
+  try{var out=await call(BANK,{action:'institutions'});institutions=out.institutions||[];renderBanks();status('bankStatus',institutions.length+' entidades disponibles.','ok')}
+  catch(e){status('bankStatus',e.message,'err')}
+}
+async function createLink(id){
+  status('bankStatus','Preparando conexión segura…','');
+  try{var out=await call(BANK,{action:'create_link',institutionId:id});if(!out.link)throw new Error('No recibí el enlace del banco');location.href=out.link}
+  catch(e){status('bankStatus',e.message,'err')}
+}
+function renderConnected(bank){
+  if(!bank||!bank.connection)return;
+  show('providerCard',false);show('bankCard',false);show('connectedCard',true);
+  var c=bank.connection,accounts=bank.accounts||[];
+  document.getElementById('connected').innerHTML='<strong>✓ '+(c.institution_name||'Banco conectado')+'</strong><div class="small">Última sincronización: '+(c.last_synced_at?new Date(c.last_synced_at).toLocaleString('es-ES'):'pendiente')+'</div>'+accounts.map(function(a){var bal=a.current_balance==null?'—':new Intl.NumberFormat('es-ES',{style:'currency',currency:a.currency||'EUR'}).format(Number(a.current_balance));return '<div class="account"><b>'+(a.display_name||'Cuenta')+' · ···· '+(a.iban_last4||'')+'</b><em>'+bal+'</em></div>'}).join('');
+}
+async function refreshStatus(){
+  try{
+    var out=await call(BANK,{action:'status'});
+    if(out.bank?.connection?.status==='LN'){renderConnected(out.bank);return true}
+    status('bankStatus','La autorización aún no está completada.','');
+  }catch(e){if(!String(e.message).includes('no_bank_connection'))status('bankStatus',e.message,'err')}
+  return false;
+}
+async function init(){
+  if(!t()){status('providerStatus','Falta la sesión de este iPhone. Abre Segunda Mente y vuelve aquí.','err');return}
+  try{
+    var current=await call(BANK,null,'GET');
+    if(current.bank?.connection?.status==='LN'){renderConnected(current.bank);return}
+    var cfg=await call(CFG,null,'GET');
+    if(cfg.enabled){show('providerCard',false);show('bankCard',true);await loadBanks()}
+    if(new URLSearchParams(location.search).get('bank_return')==='1'){show('bankCard',true);await refreshStatus()}
+  }catch(e){status('providerStatus',e.message,'err')}
+}
+document.getElementById('saveSecrets').onclick=async function(){
+  var id=document.getElementById('secretId').value.trim(),key=document.getElementById('secretKey').value.trim(),btn=this;
+  if(id.length<8||key.length<8){status('providerStatus','Pega Secret ID y Secret Key completos.','err');return}
+  btn.disabled=true;btn.textContent='Validando…';status('providerStatus','Contactando con GoCardless…','');
+  try{await call(CFG,{action:'set',secretId:id,secretKey:key});document.getElementById('secretId').value='';document.getElementById('secretKey').value='';show('providerCard',false);show('bankCard',true);await loadBanks()}
+  catch(e){status('providerStatus',e.message,'err')}
+  finally{btn.disabled=false;btn.textContent='Validar y guardar'}
+};
+document.getElementById('bankSearch').oninput=renderBanks;
+document.getElementById('banks').onclick=function(e){var b=e.target.closest('[data-bank]');if(b)createLink(b.dataset.bank)};
+document.getElementById('syncBank').onclick=async function(){this.disabled=true;try{var out=await call(BANK,{action:'sync',force:true});renderConnected(out.bank)}catch(e){alert(e.message)}finally{this.disabled=false}};
+init();
+})();
+</script>
+</body>
+</html>
