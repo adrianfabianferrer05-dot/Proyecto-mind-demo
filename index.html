@@ -14,7 +14,7 @@
 <link rel="stylesheet" href="app-polish.css?v=7">
 <link rel="stylesheet" href="gym.css?v=1">
 <link rel="stylesheet" href="gym-enhance.css?v=1">
-<link rel="stylesheet" href="gym-body.css?v=2">
+<link rel="stylesheet" href="gym-body.css?v=2">\n<link rel="stylesheet" href="memory-ui.css?v=1">
 </head>
 <body>
 <div class="boot" id="boot" aria-hidden="true"><div class="boot-mark"><svg viewBox="0 0 48 48"><path d="M7 25c5-10 11-15 17-15s12 5 17 15c-5 9-11 14-17 14S12 34 7 25Z"/><path d="M2 25h5M41 25h5"/></svg></div></div>
@@ -40,6 +40,13 @@
   <div class="composer"><textarea id="captureText" maxlength="4000" placeholder="18,50 cena · mañana llamar al taller · me deben 70€ · el viernes he quedado…"></textarea><div class="composer-foot"><div class="composer-status" id="composerStatus">Una entrada. Sin elegir carpetas.</div><button class="capture-send press" id="captureSend" aria-label="Guardar"><svg viewBox="0 0 24 24"><path d="m6 12 12-7-4 14-3-5-5-2Z"/><path d="m11 14 3-3"/></svg></button></div></div>
   <div class="clarify" id="clarifyBox"></div>
   <section class="section"><div class="section-head"><h2>Acabas de soltar</h2></div><div class="rows" id="mindRecent"></div></section>
+  <section class="memory-panel" aria-labelledby="memoryTitle">
+    <div class="memory-kicker">Memoria</div>
+    <h2 class="memory-title" id="memoryTitle">Recordar por significado.</h2>
+    <p class="memory-copy">Busca como te salga. No hace falta recordar las palabras exactas.</p>
+    <div class="memory-search"><input id="memoryQuery" type="search" placeholder="Ainhoa · Direnxia · taller · ideas de negocio" autocomplete="off"><button id="memorySearchBtn" class="press">Recordar</button></div>
+    <div class="memory-results" id="memoryResults"></div>
+  </section>
 </main>
 
 <main id="dinero" class="view">
@@ -65,6 +72,13 @@
 </nav>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="sheet" id="correctionSheet" aria-hidden="true"><div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="correctionTitle"><div class="grabber"></div><h2 class="sheet-title" id="correctionTitle">Corregir recuerdo</h2>
+  <p class="correction-copy">Dime solo qué estaba mal. Segunda Mente conservará lo demás y aprenderá la corrección.</p>
+  <div class="correction-target" id="correctionTarget"></div>
+  <textarea class="correction-text" id="correctionText" maxlength="1000" placeholder="No eran 180 €, eran 18 € · esto era un plan, no una tarea…"></textarea>
+  <div class="correction-actions"><button class="cancel press" id="correctionCancel">Cancelar</button><button class="save press" id="correctionSave">Guardar corrección</button></div>
+  <button class="sheet-close press" id="correctionClose">Cerrar</button>
+</div></div>
 <div class="sheet" id="settingsSheet" aria-hidden="true"><div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle"><div class="grabber"></div><h2 class="sheet-title" id="settingsTitle">Tu espacio</h2>
   <div class="setting"><div class="setting-copy"><span>Este iPhone</span><em>Sesión privada de este dispositivo</em></div><small id="deviceState" class="ok">Conectado</small></div>
   <div class="setting"><div class="setting-copy"><span>Notificaciones</span><em>Avisos y recordatorios</em></div><small id="notificationState">Comprobando…</small></div>
@@ -74,7 +88,7 @@
   <button class="sheet-close press" id="sheetClose">Cerrar</button>
 </div></div>
 
-<script src="app.js?v=8"></script>
+<script src="app.js?v=9"></script>\n<script src="memory-ui.js?v=1"></script>
 <script src="app-enhance.js?v=7"></script>
 <script src="gym.js?v=2"></script>
 <script src="gym-enhance.js?v=1"></script>
