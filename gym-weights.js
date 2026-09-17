@@ -1,4 +1,4 @@
-/* Load gym weight-planning enhancements first, then active-workout navigation. */
+/* Load gym enhancements in order: planned weights, active-workout navigation, then muscle progress. */
 (function(){
   const load=src=>new Promise((resolve,reject)=>{
     const s=document.createElement('script');
@@ -9,5 +9,6 @@
   });
   load('./gym-weights-core.js?v=1')
     .then(()=>load('./gym-nav.js?v=1'))
+    .then(()=>load('./gym-body.js?v=1'))
     .catch(err=>console.error('[Segunda Mente Gym]',err));
 })();
