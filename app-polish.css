@@ -1,0 +1,63 @@
+/* Final personal-use polish. Built around the existing Segunda Mente tokens. */
+.view.active{animation:viewIn 180ms var(--ease-out) both}
+@keyframes viewIn{from{opacity:.72;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+
+.skeleton:before,.skeleton:after{animation:skeletonBreathe 1.35s ease-in-out infinite}
+.skeleton:after{animation-delay:90ms}
+@keyframes skeletonBreathe{50%{opacity:.48}}
+
+.nav button svg{transition:transform 150ms var(--ease-out),color 140ms ease}
+.nav button.active svg{transform:translateY(-1px)}
+.focus:before{animation:focusGlow 3.2s ease-in-out infinite}
+@keyframes focusGlow{50%{box-shadow:0 0 28px rgba(202,255,88,.5);opacity:.72}}
+
+.setting-right{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+.setting-mini{min-height:44px;padding:0 12px;border:1px solid var(--line);border-radius:13px;background:var(--surface-2);color:var(--ink);font-size:11px;font-weight:720;transition:transform 140ms var(--ease-out),background-color 140ms ease,border-color 140ms ease}
+.setting-mini:active{transform:scale(.97)}
+.setting-mini.signal{background:rgba(202,255,88,.08);border-color:rgba(202,255,88,.16);color:var(--signal)}
+
+.api-layer{position:fixed;z-index:95;inset:0;background:rgba(0,0,0,0);pointer-events:none;transition:background-color 240ms ease}
+.api-layer.show{background:rgba(0,0,0,.58);pointer-events:auto}
+.api-panel{position:absolute;left:50%;bottom:0;width:min(600px,100%);transform:translate(-50%,102%);background:#15181c;border:1px solid rgba(255,255,255,.08);border-bottom:0;border-radius:29px 29px 0 0;padding:12px 20px calc(22px + env(safe-area-inset-bottom));box-shadow:0 -24px 70px rgba(0,0,0,.48);transition:transform 400ms var(--ease-drawer)}
+.api-layer.show .api-panel{transform:translate(-50%,0)}
+.api-kicker{font-size:11px;color:var(--signal);margin:0 0 8px;font-weight:730}
+.api-title{font-family:var(--display);font-size:31px;line-height:1;letter-spacing:-.03em;font-weight:600;margin:0}
+.api-copy{color:var(--muted);font-size:13px;line-height:1.55;margin:13px 0 18px;max-width:43ch}
+.api-field{border-top:1px solid var(--line);padding-top:16px}
+.api-field label{display:block;color:var(--muted);font-size:11px;margin-bottom:8px}
+.api-field input{width:100%;height:54px;border:1px solid var(--line);border-radius:17px;background:var(--surface);padding:0 14px;outline:0;font-size:15px;caret-color:var(--signal);transition:border-color 150ms ease,background-color 150ms ease}
+.api-field input:focus{border-color:rgba(202,255,88,.24);background:var(--surface-2)}
+.api-status{min-height:36px;padding-top:10px;color:var(--muted);font-size:11px;line-height:1.45}
+.api-status.ok{color:var(--good)}
+.api-status.err{color:var(--danger)}
+.api-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:3px}
+.api-action{min-height:50px;border-radius:16px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);font-size:12px;font-weight:730;text-decoration:none;display:grid;place-items:center;text-align:center;transition:transform 140ms var(--ease-out),background-color 140ms ease,border-color 140ms ease,opacity 140ms ease}
+.api-action:active{transform:scale(.97)}
+.api-action.primary{background:var(--signal);border-color:transparent;color:var(--signal-ink)}
+.api-action:disabled{opacity:.42}
+.api-privacy{margin-top:13px;color:#71767e;font-size:10px;line-height:1.5}
+.api-close{width:44px;height:44px;border:0;border-radius:14px;background:transparent;color:var(--muted);display:grid;place-items:center;position:absolute;right:14px;top:11px;transition:transform 140ms var(--ease-out),background-color 140ms ease,color 140ms ease}
+.api-close:active{transform:scale(.97)}
+.api-close svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+
+@media (hover:hover) and (pointer:fine){
+  .setting-mini:hover,.api-action:not(.primary):hover,.api-close:hover{background:var(--surface-3);border-color:var(--line-strong)}
+  .api-close:hover{color:var(--ink)}
+}
+
+@media(max-width:390px){
+  .setting-right{gap:5px}
+  .setting-mini{padding:0 10px}
+  .api-title{font-size:29px}
+  .api-actions{grid-template-columns:1fr}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .view.active{animation:reducedPolishFade 140ms ease both;transform:none}
+  .skeleton:before,.skeleton:after,.focus:before{animation:none!important}
+  .nav button.active svg{transform:none}
+  .api-panel{transform:translate(-50%,0);opacity:0;visibility:hidden;transition:opacity 160ms ease,visibility 160ms}
+  .api-layer.show .api-panel{opacity:1;visibility:visible}
+  .setting-mini,.api-action,.api-close{transition-duration:100ms!important}
+}
+@keyframes reducedPolishFade{from{opacity:.82}to{opacity:1}}
