@@ -117,6 +117,16 @@ Deno.serve(async (req)=>{
     if(req.method!=="POST")return json({ok:false,error:"method_not_allowed"},405);
     const body=await req.json().catch(()=>({})),action=String(body.action||"status");
     if(action==="institutions"){const out=await eb("/aspsps?country=ES"),list=Array.isArray(out?.aspsps)?out.aspsps:[];return json({ok:true,institutions:list.map((x:any)=>({name:x.name,country:x.country||"ES",logo:x.logo||null,maximum_consent_validity:x.maximum_consent_validity||null})).sort((a:any,b:any)=>String(a.name).localeCompare(String(b.name),"es"))})}
+    if(action==="balance_refresh_link"){
+      const conn=await latest(device.id);if(!conn||conn.status!=="AUTHORIZED")return json({ok:false,error:"no_authorized_bank"},404);
+      const out=await eb("/aspsps?country=ES"),list=Array.isArray(out?.aspsps)?out.aspsps:[],institution=list.find((x:any)=>String(x.name)===String(conn.institution_name))||list.find((x:any)=>String(x.name).toLowerCase().includes(String(conn.institution_name||"").toLowerCase()));if(!institution)return json({ok:false,error:"institution_not_found"},404);
+      const state=crypto.randomUUID(),maxSec=Math.max(3600,Math.min(Number(institution.maximum_consent_validity)||90*86400,90*86400)),validUntil=new Date(Date.now()+maxSec*1000).toISOString();
+      const authOut=await eb("/auth",{method:"POST",body:JSON.stringify({access:{valid_until:validUntil,balances:true,transactions:false},aspsp:{name:institution.name,country:"ES"},state,redirect_url:CALLBACK,psu_type:"personal",language:"es"})});
+      const authorizationId=String(authOut.authorization_id||crypto.randomUUID());
+      const rows=await sql`insert into public.bank_connections(device_session_id,provider,institution_id,institution_name,requisition_id,status,provider_accounts,consent_expires_at) values(${device.id},'enablebanking',${String(institution.name)},${String(institution.name)},${authorizationId},'PENDING_AUTHORIZATION',${sql.json({state,authorization_id:authorizationId,purpose:"balance_refresh",target_connection_id:conn.id})},${new Date(validUntil)}) returning id`;
+      await audit(device.id,"bank_balance_reauth_created","target="+conn.id);
+      return json({ok:true,connectionId:rows[0].id,link:authOut.url,status:"PENDING_AUTHORIZATION",purpose:"balance_refresh"});
+    }
     if(action==="create_link"){
       const bankName=String(body.bankName||"").trim();if(!bankName)return json({ok:false,error:"institution_required"},400);
       const out=await eb("/aspsps?country=ES"),list=Array.isArray(out?.aspsps)?out.aspsps:[],institution=list.find((x:any)=>String(x.name)===bankName)||list.find((x:any)=>String(x.name).toLowerCase().includes(bankName.toLowerCase()));if(!institution)return json({ok:false,error:"institution_not_found"},404);
