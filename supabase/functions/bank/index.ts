@@ -27,7 +27,7 @@ function txAmount(t:any){const v=Number(t?.transaction_amount?.amount);if(!Numbe
 function txMerchant(t:any,amount:number){const party=amount<0?t?.creditor:t?.debtor;return String(party?.name||"").slice(0,180)||null}
 function txDescription(t:any){const rem=Array.isArray(t?.remittance_information)?t.remittance_information.join(" · "):"";return String(rem||t?.note||t?.bank_transaction_code?.description||t?.reference_number||"Movimiento bancario").slice(0,500)}
 async function txKey(accountId:string,t:any){const direct=t?.entry_reference||t?.transaction_id||t?.reference_number;if(direct)return String(direct).slice(0,240);return await sha256Hex([accountId,t?.booking_date||"",t?.value_date||"",t?.transaction_amount?.amount||"",t?.credit_debit_indicator||"",txDescription(t)].join("|"))}
-async function saveAccounts(conn:any,session:any,deviceId:string){
+async function saveAccounts(conn:any,session:any,deviceId:string){let anyBalance=false;
   const accounts=Array.isArray(session?.accounts)?session.accounts:[];
   for(const a of accounts){
     const uid=accountUid(a);if(!uid)continue;
@@ -38,7 +38,7 @@ async function saveAccounts(conn:any,session:any,deviceId:string){
     }catch(e){
       await audit(deviceId,"bank_balances_error",e instanceof Error?e.message:String(e),(e as any)?.status||null);
     }
-    const iban=accountIban(a),bal=balancePick(balances),currency=String(a?.currency||bal.currency||"EUR");
+    const iban=accountIban(a),bal=balancePick(balances),currency=String(a?.currency||bal.currency||"EUR");if(bal.current!=null||bal.available!=null)anyBalance=true;
     await sql`insert into public.bank_accounts(connection_id,provider_account_id,display_name,iban_last4,currency,owner_name,current_balance,available_balance,last_synced_at)
       values(${conn.id},${uid},${String(a?.product||a?.name||conn.institution_name||"Cuenta").slice(0,180)},${iban?iban.slice(-4):null},${currency.slice(0,8)},${a?.name?String(a.name).slice(0,180):null},${bal.current},${bal.available},now())
       on conflict(connection_id,provider_account_id) do update set
@@ -47,8 +47,10 @@ async function saveAccounts(conn:any,session:any,deviceId:string){
       available_balance=coalesce(excluded.available_balance,public.bank_accounts.available_balance),
       last_synced_at=now(),updated_at=now()`;
   }
+  if(anyBalance)await sql`update public.bank_connections set balance_synced_at=now(),sync_error=null,updated_at=now() where id=${conn.id}`;
+  return anyBalance;
 }
-async function fetchTransactions(conn:any,deviceId:string){
+async function fetchTransactions(conn:any,deviceId:string){let anySuccess=false,totalAll=0;
   const accounts=await sql`select * from public.bank_accounts where connection_id=${conn.id}::uuid`;
   const dateFrom=new Date(Date.now()-45*86400000).toISOString().slice(0,10);
   for(const a of accounts){
@@ -70,21 +72,48 @@ async function fetchTransactions(conn:any,deviceId:string){
         key=out?.continuation_key?String(out.continuation_key):null;
         pages++;
       }while(key&&pages<3);
-      await audit(deviceId,"bank_transactions_ok","account="+String(a.provider_account_id).slice(0,8)+" recent_count="+total);
+      anySuccess=true;totalAll+=total;await audit(deviceId,"bank_transactions_ok","account="+String(a.provider_account_id).slice(0,8)+" recent_count="+total);
     }catch(e){
       await audit(deviceId,"bank_transactions_error",e instanceof Error?e.message:String(e),(e as any)?.status||null);
     }
   }
+  if(anySuccess)await sql`update public.bank_connections set transactions_synced_at=now(),sync_error=null,updated_at=now() where id=${conn.id}`;
+  return {ok:anySuccess,count:totalAll};
 }
-async function syncConnection(conn:any,deviceId:string,force=false){if(!conn?.requisition_id||conn.status!=="AUTHORIZED")return summary(conn.id);if(!force&&conn.last_synced_at&&Date.now()-new Date(conn.last_synced_at).getTime()<60*60000){const health=await sql`select exists(select 1 from public.bank_accounts where connection_id=${conn.id}::uuid and current_balance is not null) as has_balance,exists(select 1 from public.bank_transactions t join public.bank_accounts a on a.id=t.bank_account_id where a.connection_id=${conn.id}::uuid) as has_tx`;if(health[0]?.has_balance&&health[0]?.has_tx)return summary(conn.id)}await audit(deviceId,"bank_sync_start","connection="+conn.id);const session=await eb("/sessions/"+encodeURIComponent(conn.requisition_id));const accountsData=Array.isArray(session?.accounts_data)?session.accounts_data:[];let accounts:any[]=Array.isArray(session?.accounts)?session.accounts:[];if(!accounts.length&&accountsData.length)accounts=accountsData.map((x:any)=>({uid:x.uid}));await audit(deviceId,"bank_session_ok","accounts="+accounts.length);await sql`update public.bank_connections set provider_accounts=${sql.json(accounts)},consent_expires_at=${session?.access?.valid_until?new Date(session.access.valid_until):null},updated_at=now() where id=${conn.id}`;await saveAccounts(conn,{accounts},deviceId);await fetchTransactions(conn,deviceId);await sql`update public.bank_connections set last_synced_at=now(),updated_at=now() where id=${conn.id}`;const result=await summary(conn.id);const hasBalance=(result?.accounts||[]).some((a:any)=>a.current_balance!=null);await audit(deviceId,hasBalance?"bank_sync_done":"bank_sync_partial",hasBalance?null:"balance_missing");return {...result,sync_partial:!hasBalance}}
-async function summary(id:string){const con=await sql`select id,provider,institution_id,institution_name,status,provider_accounts,consent_expires_at,last_synced_at,created_at from public.bank_connections where id=${id}::uuid limit 1`;if(!con.length)return null;const accounts=await sql`select id,display_name,iban_last4,currency,current_balance,available_balance,last_synced_at from public.bank_accounts where connection_id=${id}::uuid order by created_at`;const tx=await sql`select t.id,t.booked_at,t.amount,t.currency,t.merchant,t.description,a.display_name as account_name from public.bank_transactions t join public.bank_accounts a on a.id=t.bank_account_id where a.connection_id=${id}::uuid order by t.booked_at desc nulls last,t.created_at desc limit 60`;return {connection:con[0],accounts,transactions:tx}}
+async function syncConnection(conn:any,deviceId:string,force=false){
+  if(!conn?.requisition_id||conn.status!=="AUTHORIZED")return summary(conn.id);
+  const now=Date.now(),balanceFresh=conn.balance_synced_at&&now-new Date(conn.balance_synced_at).getTime()<6*3600e3,txFresh=conn.transactions_synced_at&&now-new Date(conn.transactions_synced_at).getTime()<6*3600e3;
+  if(!force&&balanceFresh&&txFresh)return summary(conn.id);
+  await audit(deviceId,"bank_sync_start","connection="+conn.id);
+  try{
+    const session=await eb("/sessions/"+encodeURIComponent(conn.requisition_id));
+    let accounts:any[]=Array.isArray(session?.accounts)?session.accounts:[];
+    const accountsData=Array.isArray(session?.accounts_data)?session.accounts_data:[];
+    if(!accounts.length&&accountsData.length)accounts=accountsData.map((x:any)=>({uid:x.uid}));
+    await audit(deviceId,"bank_session_ok","accounts="+accounts.length);
+    await sql`update public.bank_connections set provider_accounts=${sql.json(accounts)},consent_expires_at=${session?.access?.valid_until?new Date(session.access.valid_until):conn.consent_expires_at},updated_at=now() where id=${conn.id}`;
+    const gotBalance=balanceFresh&&!force?true:await saveAccounts(conn,{accounts},deviceId);
+    let txResult={ok:true,count:0};
+    if(!txFresh||force)txResult=await fetchTransactions(conn,deviceId);
+    const partial=!gotBalance;
+    await sql`update public.bank_connections set last_synced_at=case when ${!partial} then now() else last_synced_at end,sync_error=${partial?"balance_missing":null},updated_at=now() where id=${conn.id}`;
+    await audit(deviceId,partial?"bank_sync_partial":"bank_sync_done",partial?"balance_missing":"tx="+txResult.count);
+    const result=await summary(conn.id);return {...result,sync_partial:partial};
+  }catch(e){
+    const msg=e instanceof Error?e.message:String(e);const status=(e as any)?.status||null;
+    await sql`update public.bank_connections set sync_error=${msg.slice(0,300)},updated_at=now() where id=${conn.id}`;
+    await audit(deviceId,"bank_sync_error",msg,status);
+    throw e;
+  }
+}
+async function summary(id:string){const con=await sql`select id,provider,institution_id,institution_name,status,provider_accounts,consent_expires_at,last_synced_at,balance_synced_at,transactions_synced_at,sync_error,created_at from public.bank_connections where id=${id}::uuid limit 1`;if(!con.length)return null;const accounts=await sql`select id,display_name,iban_last4,currency,current_balance,available_balance,last_synced_at from public.bank_accounts where connection_id=${id}::uuid order by created_at`;const tx=await sql`select t.id,t.booked_at,t.amount,t.currency,t.merchant,t.description,a.display_name as account_name from public.bank_transactions t join public.bank_accounts a on a.id=t.bank_account_id where a.connection_id=${id}::uuid order by t.booked_at desc nulls last,t.created_at desc limit 60`;return {connection:con[0],accounts,transactions:tx}}
 
 Deno.serve(async (req)=>{
   if(req.method==="OPTIONS")return new Response(null,{status:204,headers:cors});
   const origin=req.headers.get("origin");if(origin&&origin!==ORIGIN)return json({ok:false,error:"origin_not_allowed"},403);
   const device=await auth(req);if(!device)return json({ok:false,error:"unauthorized"},401);
   try{
-    if(req.method==="GET"){const conn=await latest(device.id);return json({ok:true,configured:!!(await secret(APP_ID_NAME)),provider:"enablebanking",bank:conn?(conn.status==="AUTHORIZED"?await syncConnection(conn,device.id,false):await summary(conn.id)):null})}
+    if(req.method==="GET"){const conn=await latest(device.id);return json({ok:true,configured:!!(await secret(APP_ID_NAME)),provider:"enablebanking",bank:conn?await summary(conn.id):null})}
     if(req.method!=="POST")return json({ok:false,error:"method_not_allowed"},405);
     const body=await req.json().catch(()=>({})),action=String(body.action||"status");
     if(action==="institutions"){const out=await eb("/aspsps?country=ES"),list=Array.isArray(out?.aspsps)?out.aspsps:[];return json({ok:true,institutions:list.map((x:any)=>({name:x.name,country:x.country||"ES",logo:x.logo||null,maximum_consent_validity:x.maximum_consent_validity||null})).sort((a:any,b:any)=>String(a.name).localeCompare(String(b.name),"es"))})}
@@ -108,7 +137,8 @@ Deno.serve(async (req)=>{
       await saveAccounts(updated,session,device.id);const bank=await syncConnection(updated,device.id,true);return json({ok:true,bank});
     }
     const conn=await latest(device.id);if(!conn)return json({ok:false,error:"no_bank_connection"},404);
-    if(action==="status")return json({ok:true,bank:conn.status==="AUTHORIZED"?await syncConnection(conn,device.id,false):await summary(conn.id)});
+    if(action==="status")return json({ok:true,bank:await summary(conn.id)});
+    if(action==="balance"){const session=await eb("/sessions/"+encodeURIComponent(conn.requisition_id));const accounts=Array.isArray(session?.accounts)?session.accounts:[];const got=await saveAccounts(conn,{accounts},device.id);if(!got){await sql`update public.bank_connections set sync_error='balance_missing',updated_at=now() where id=${conn.id}`;return json({ok:true,bank:{...(await summary(conn.id)),sync_partial:true}})}return json({ok:true,bank:await summary(conn.id)});}
     if(action==="sync")return json({ok:true,bank:await syncConnection(conn,device.id,body.force===true)});
     if(action==="disconnect"){if(conn.status==="AUTHORIZED"&&conn.requisition_id){try{await eb("/sessions/"+encodeURIComponent(conn.requisition_id),{method:"DELETE"})}catch{}}await sql`update public.bank_connections set revoked_at=now(),status='REVOKED',updated_at=now() where id=${conn.id}`;return json({ok:true})}
     return json({ok:false,error:"unknown_action"},400);
