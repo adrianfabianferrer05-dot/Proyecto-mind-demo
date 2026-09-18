@@ -52,7 +52,8 @@
 <main id="dinero" class="view">
   <div class="page-head"><h1>Dinero,<br>sin perseguirlo.</h1><p>Lo que entra, sale o queda pendiente aparece aquí a partir de lo que vas contando.</p></div>
   <section class="money-summary"><div class="money-main" id="moneyNet">—</div><div class="money-caption">Balance capturado este mes</div><div class="money-grid"><div class="money-stat"><span>Entró</span><b id="moneyIn">—</b></div><div class="money-stat"><span>Salió</span><b id="moneyOut">—</b></div></div><div class="debt-strip"><div class="debt-cell"><span>Por cobrar</span><b id="moneyReceivable">—</b></div><div class="debt-cell"><span>Por pagar</span><b id="moneyPayable">—</b></div></div></section>
-  <div class="money-note"><svg viewBox="0 0 24 24"><path d="M3 9h18M5 9v8M9 9v8M15 9v8M19 9v8M3 20h18M12 3l9 4H3l9-4Z"/></svg><span>La sincronización bancaria todavía no está conectada. Por ahora esta vista usa tus capturas y el Atajo del iPhone.</span></div>
+  <div class="money-note"><svg viewBox="0 0 24 24"><path d="M3 9h18M5 9v8M9 9v8M15 9v8M19 9v8M3 20h18M12 3l9 4H3l9-4Z"/></svg><span>La sincronización bancaria todavía no está conectada.</span></div>
+  <button class="text-btn" id="bankConnectInline">Conectar banco desde Segunda Mente</button>
   <section class="section"><div class="section-head"><h2>Movimientos</h2></div><div class="rows" id="moneyRows"></div></section>
 </main>
 
@@ -84,11 +85,11 @@
   <div class="setting"><div class="setting-copy"><span>Notificaciones</span><em>Avisos y recordatorios</em></div><small id="notificationState">Comprobando…</small></div>
   <div class="setting"><div class="setting-copy"><span>Interpretación</span><em>Cómo entiende lo que escribes</em></div><small id="aiState">Local</small></div>
   <div class="setting"><div class="setting-copy"><span>Por sincronizar</span><em>Capturas guardadas sin red</em></div><small id="queueState">0</small></div>
-  <div class="setting"><div class="setting-copy"><span>Banco</span><em>Sincronización automática de movimientos</em></div><small>Pendiente</small></div>
+  <div class="setting" id="bankSettings" role="button" tabindex="0" aria-label="Conectar banco"><div class="setting-copy"><span>Banco</span><em>Sincronización automática de movimientos</em></div><small id="bankState">Conectar →</small></div>
   <button class="sheet-close press" id="sheetClose">Cerrar</button>
 </div></div>
 
-<script src="app.js?v=9"></script>\n<script src="memory-ui.js?v=1"></script>
+<script src="app.js?v=10"></script>\n<script src="memory-ui.js?v=1"></script>
 <script src="app-enhance.js?v=7"></script>
 <script src="gym.js?v=2"></script>
 <script src="gym-enhance.js?v=1"></script>
