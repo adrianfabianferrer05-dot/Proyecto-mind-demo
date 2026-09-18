@@ -65,4 +65,4 @@ Deno.serve(async (req)=>{
     if(action==="disconnect"){if(conn.status==="AUTHORIZED"&&conn.requisition_id){try{await eb("/sessions/"+encodeURIComponent(conn.requisition_id),{method:"DELETE"})}catch{}}await sql`update public.bank_connections set revoked_at=now(),status='REVOKED',updated_at=now() where id=${conn.id}`;return json({ok:true})}
     return json({ok:false,error:"unknown_action"},400);
   }catch(e){const status=(e as any)?.status;console.error("bank",e instanceof Error?e.message:String(e));return json({ok:false,error:"bank_error",detail:e instanceof Error?e.message:"No pude conectar con el banco"},status===429?429:status===403?403:status===401?401:500)}
-}));
+});
