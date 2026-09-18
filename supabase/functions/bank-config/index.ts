@@ -61,7 +61,7 @@ async function validate(appId:string,pem:string){
   if(out?.active===false)throw new Error("La aplicación de Enable Banking aparece Inactive. Actívala con Link accounts y vuelve aquí.");
   return {application:{name:out?.name||"Segunda Mente",active:out?.active!==false,environment:out?.environment||"PRODUCTION"}};
 }
-Deno.serve(async(req=>{
+Deno.serve(async (req)=>{
   if(req.method==="OPTIONS")return new Response(null,{status:204,headers:cors});
   const origin=req.headers.get("origin");if(origin&&origin!==ORIGIN)return json({ok:false,error:"origin_not_allowed"},403);
   const device=await auth(req);if(!device)return json({ok:false,error:"unauthorized"},401);
