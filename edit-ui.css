@@ -1,0 +1,59 @@
+/* Las dos hojas que escriben directo (editar algo y decidir cuándo avisarte).
+   Comparten estilos a propósito: son el mismo gesto —tocar, cambiar, guardar— y
+   deben sentirse iguales. Todo apoyado en las variables de app.css para que un
+   cambio de color siga valiendo para una sola app, no para seis. */
+
+.edit-label{display:block;font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--dim);margin:14px 0 7px}
+.edit-label:first-of-type{margin-top:0}
+
+.edit-input{width:100%;min-height:50px;background:var(--bg-soft);color:var(--ink);border:1px solid var(--line);border-radius:15px;padding:0 14px;font:inherit;font-size:15px;outline:none;transition:border-color 140ms ease}
+.edit-input:focus{border-color:rgba(202,255,88,.32)}
+input.edit-input[type=datetime-local]{appearance:none;-webkit-appearance:none;line-height:48px}
+input.edit-input[type=datetime-local]::-webkit-calendar-picker-indicator{filter:invert(1);opacity:.45}
+
+.edit-kinds{display:flex;flex-wrap:wrap;gap:7px}
+.edit-kind{min-height:44px;padding:0 15px;border-radius:14px;border:1px solid var(--line);background:var(--surface-2);color:var(--muted);font:inherit;font-size:12px;font-weight:700;transition:transform 140ms var(--ease-out),background-color 140ms ease,color 140ms ease,border-color 140ms ease}
+.edit-kind.is-on{background:rgba(202,255,88,.11);border-color:rgba(202,255,88,.3);color:var(--signal)}
+.edit-kind:active{transform:scale(.97)}
+
+.edit-quick{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}
+.edit-chip{min-height:44px;padding:0 13px;border-radius:13px;border:1px solid var(--line);background:transparent;color:var(--muted);font:inherit;font-size:11px;font-weight:700;transition:transform 140ms var(--ease-out),color 140ms ease,border-color 140ms ease}
+.edit-chip:active{transform:scale(.97);color:var(--ink);border-color:var(--line-strong)}
+
+.edit-note{font-size:11px;line-height:1.45;color:var(--dim);margin:9px 0 0}
+
+.edit-row{min-height:62px;display:flex;align-items:center;justify-content:space-between;gap:16px;border-top:1px solid var(--line)}
+.edit-row:first-child{border-top:0}
+/* `display:flex` gana al `[hidden]` del navegador, asi que una fila marcada como
+   oculta seguia viendose: la franja de silencio con el silencio apagado, o el
+   interruptor de "completada" al crear algo que aun no existe. */
+#editSheet [hidden],#prefsSheet [hidden]{display:none}
+
+/* Interruptor: 52×32 de superficie visible, pero el botón mide 44 de alto para que
+   el dedo no falle en un iPhone. */
+.edit-toggle{position:relative;flex:0 0 auto;width:52px;height:44px;border:0;background:none;padding:0;display:grid;place-items:center}
+.edit-toggle:before{content:"";position:absolute;width:52px;height:31px;border-radius:99px;background:var(--surface-3);border:1px solid var(--line);transition:background-color 180ms ease,border-color 180ms ease}
+.edit-toggle i{position:relative;z-index:1;width:25px;height:25px;border-radius:99px;background:#6e737b;transform:translateX(-11px);transition:transform 220ms var(--ease-out),background-color 180ms ease}
+.edit-toggle.is-on:before{background:rgba(202,255,88,.22);border-color:rgba(202,255,88,.34)}
+.edit-toggle.is-on i{transform:translateX(11px);background:var(--signal)}
+
+.edit-select{min-height:44px;background:var(--surface-2);color:var(--ink);border:1px solid var(--line);border-radius:13px;padding:0 10px;font:inherit;font-size:12px;font-weight:700;outline:none;appearance:none;-webkit-appearance:none}
+.edit-range{display:flex;align-items:center;gap:7px;color:var(--dim);font-size:12px}
+
+.edit-actions{display:grid;grid-template-columns:1fr 1.3fr;gap:8px;margin-top:16px}
+.edit-actions button{min-height:50px;border-radius:15px;border:1px solid var(--line);font:inherit;font-size:12px;font-weight:720;transition:transform 140ms var(--ease-out)}
+.edit-actions button:active{transform:scale(.98)}
+.edit-actions .cancel{background:var(--surface-2);color:var(--muted)}
+.edit-actions .save{background:var(--signal);color:#090b0c;border-color:transparent}
+.edit-actions .save:disabled{opacity:.6}
+
+.edit-archive{width:100%;min-height:46px;margin-top:8px;border:0;border-radius:15px;background:transparent;color:var(--dim);font:inherit;font-size:11px;font-weight:700}
+.edit-archive:active{color:var(--ink)}
+
+#prefsBody.is-off .edit-row:not(:first-child){opacity:.38}
+
+@media(max-width:360px){
+  .edit-kind{padding:0 12px;font-size:11px}
+  .edit-row{gap:10px}
+  .setting-copy em{font-size:9.5px}
+}

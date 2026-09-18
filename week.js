@@ -49,7 +49,7 @@
   function sessionRow(h) {
     const vol = Number(h.volume_kg) || 0;
     const time = new Intl.DateTimeFormat('es-ES', { hour: '2-digit', minute: '2-digit' }).format(new Date(h.started_at));
-    return `<div class="row week-gym-row">
+    return `<div class="row week-gym-row" data-week-gym="1" role="button" tabindex="0" aria-label="Ver este entreno en Gym">
       <div class="row-icon gym"><svg viewBox="0 0 24 24"><path d="M3 9v6M6 7v10M18 7v10M21 9v6M6 12h12"/></svg></div>
       <div class="row-copy"><div class="row-title">${esc(h.day_name_snapshot || 'Entreno')}</div>
       <div class="row-sub">${esc(time)} · ${Number(h.set_count) || 0} series</div></div>
@@ -97,11 +97,15 @@
         const body =
           captures.length || sessions.length
             ? sessions.map(sessionRow).join('') + captures.map((c) => row(c, { archive: false })).join('')
-            : `<div class="week-empty">${past ? 'Sin nada registrado' : 'Libre'}</div>`;
+            : `<button class="week-empty press" data-week-add="${i}">${past ? 'Sin nada registrado' : 'Libre'}<i>+</i></button>`;
         return `<section class="week-day${isToday ? ' is-today' : ''}${past ? ' is-past' : ''}" id="weekDay${i}">
           <header class="week-day-head">
             <h3>${longDay.format(d)}<span>${d.getDate()}</span></h3>
-            ${isToday ? '<em>Hoy</em>' : ''}
+            <div class="week-day-tools">
+              ${isToday ? '<em>Hoy</em>' : ''}
+              ${isToday ? `<button class="week-day-btn press" data-week-train="1" aria-label="Entrenar hoy"><svg viewBox="0 0 24 24"><path d="M3 9v6M6 7v10M18 7v10M21 9v6M6 12h12"/></svg></button>` : ''}
+              <button class="week-day-btn press" data-week-add="${i}" aria-label="Añadir algo el ${d.getDate()}"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+            </div>
           </header>
           <div class="rows">${body}</div>
         </section>`;
@@ -149,12 +153,43 @@
       render();
     };
 
+    /* Todo lo que se toca en Semana pasa por aqui. Delegado, porque el contenido se
+       vuelve a pintar entero en cada cambio y los oyentes uno a uno se perderian. */
     view.addEventListener('click', (e) => {
       const move = e.target.closest('[data-week-move]');
-      if (!move) return;
-      const v = Number(move.dataset.weekMove);
-      offset = v === 0 ? 0 : offset + v;
-      render();
+      if (move) {
+        const v = Number(move.dataset.weekMove);
+        offset = v === 0 ? 0 : offset + v;
+        render();
+        return;
+      }
+      const add = e.target.closest('[data-week-add]');
+      if (add) {
+        const day = days()[Number(add.dataset.weekAdd)];
+        /* Al crear algo en un dia que no es hoy, la semana se queda donde estas. */
+        if (typeof openCaptureCreator === 'function') openCaptureCreator(day);
+        return;
+      }
+      if (e.target.closest('[data-week-train]') || e.target.closest('[data-week-gym]')) {
+        if (document.getElementById('gym')) go('gym');
+        else toast('El módulo de gym aún no ha cargado');
+        return;
+      }
+      /* La casilla de completar ya la lleva `bindRows()`; abrir el editor encima
+         convertiria un gesto de un toque en dos. */
+      if (e.target.closest('[data-complete]')) return;
+      const item = e.target.closest('.week-day .row[data-id]');
+      if (item && typeof openCaptureEditor === 'function') openCaptureEditor(item.dataset.id);
+    });
+
+    /* Mismo gesto con teclado para las filas que no son botones de verdad. */
+    view.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const gym = e.target.closest?.('[data-week-gym]');
+      if (gym) {
+        e.preventDefault();
+        if (document.getElementById('gym')) go('gym');
+      }
     });
 
     /* Cuando app.js vuelve a pintar tras guardar o sincronizar, la semana se entera. */

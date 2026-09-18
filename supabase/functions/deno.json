@@ -1,10 +1,10 @@
 {
-  "//": "Config raiz de las Edge Functions. Sin esto no se podia hacer typecheck del backend: deno no resolvia los paquetes npm. `deno task check` verifica las siete funciones.",
+  "//": "Config raiz de las Edge Functions. Sin esto no se podia hacer typecheck del backend: deno no resolvia los paquetes npm. `deno task check` verifica las ocho funciones.",
   "nodeModulesDir": "auto",
   "imports": {
     "@supabase/functions-js/edge-runtime.d.ts": "jsr:@supabase/functions-js/edge-runtime.d.ts"
   },
   "tasks": {
-    "check": "deno check --no-lock bank/index.ts bank-balance/index.ts bank-callback/index.ts bank-config/index.ts mind/index.ts mind-config/index.ts push/index.ts"
+    "check": "deno check --no-lock bank/index.ts bank-balance/index.ts bank-callback/index.ts bank-config/index.ts mind/index.ts mind-config/index.ts mind-edit/index.ts push/index.ts"
   }
 }

@@ -10,7 +10,8 @@
 .week-range{font-size:15px;font-weight:720;letter-spacing:-.02em}
 .week-sub{margin-top:3px;color:var(--muted);font-size:11px;line-height:1.4}
 .week-nav{display:flex;gap:6px;flex:0 0 auto}
-.week-arrow{width:36px;height:36px;border:1px solid var(--line);border-radius:12px;background:transparent;
+/* 44px de verdad, no 36: en un iPhone la diferencia es fallar el toque. */
+.week-arrow{width:44px;height:44px;border:1px solid var(--line);border-radius:14px;background:transparent;
   display:grid;place-items:center;transition:transform 140ms var(--ease-out),background-color 160ms ease,border-color 160ms ease}
 .week-arrow svg{width:17px;height:17px;fill:none;stroke:var(--muted);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .week-arrow:active{transform:scale(.94);background:var(--surface-2)}
@@ -30,8 +31,8 @@
 
 .week-days{display:flex;flex-direction:column;gap:16px}
 .week-day{scroll-margin-top:14px}
-.week-day-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:7px;
-  padding-bottom:7px;border-bottom:1px solid var(--line)}
+.week-day-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:5px;
+  padding-bottom:3px;border-bottom:1px solid var(--line)}
 .week-day-head h3{margin:0;font-size:12px;font-weight:700;letter-spacing:.01em;text-transform:capitalize;
   display:flex;align-items:baseline;gap:7px}
 .week-day-head h3 span{color:var(--dim);font-size:11px;font-weight:600;font-variant-numeric:tabular-nums}
@@ -39,12 +40,34 @@
 .week-day.is-past .week-day-head h3{color:var(--muted)}
 .week-day.is-past .rows{opacity:.72}
 .week-day.is-today .week-day-head{border-bottom-color:rgba(202,255,88,.28)}
-.week-empty{color:var(--dim);font-size:11px;padding:9px 2px 4px}
+/* Cada dia trae sus acciones: anadir algo ese dia, y entrenar si es hoy. Botones de
+   44 de alto aunque se vean pequenos, que es lo que el dedo necesita en un iPhone. */
+.week-day-tools{display:flex;align-items:center;gap:4px;flex:0 0 auto}
+.week-day-btn{width:44px;height:44px;border:0;border-radius:13px;background:transparent;
+  display:grid;place-items:center;transition:transform 140ms var(--ease-out),background-color 160ms ease}
+.week-day-btn svg{width:16px;height:16px;fill:none;stroke:var(--dim);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.week-day-btn:active{transform:scale(.92);background:var(--surface-2)}
+.week-day-btn[data-week-train] svg{stroke:var(--signal)}
+
+/* Una fila de Semana se toca para editarla: el dia entero es el mando. */
+.week-day .row{cursor:pointer}
+.week-day .row:active{background:var(--surface-2)}
+
+.week-empty{display:flex;width:100%;align-items:center;justify-content:space-between;gap:8px;
+  color:var(--dim);font:inherit;font-size:11px;text-align:left;min-height:44px;padding:0 2px;
+  border:0;border-radius:12px;background:transparent;transition:background-color 160ms ease,color 160ms ease}
+.week-empty i{font-style:normal;font-size:15px;line-height:1;color:var(--dim);opacity:.7}
+.week-empty:active{background:var(--surface-2);color:var(--muted)}
 .row-icon.gym svg{stroke:var(--signal)}
+.week-gym-row{cursor:pointer}
 .week-gym-row .row-side{color:var(--muted);font-size:11px}
 
 @media(max-width:360px){
-  .week-strip{gap:3px}
+  /* En una pantalla de 320 no caben siete columnas de 44px, y 44 es lo que necesita
+     un dedo. Antes que encoger los dias a 39, la tira se desliza: se siguen viendo
+     casi todos de un vistazo y el que falta esta a un gesto. */
+  .week-strip{grid-template-columns:repeat(7,44px);gap:4px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+  .week-strip::-webkit-scrollbar{display:none}
   .week-chip{min-height:56px;border-radius:13px}
   .week-chip-num{font-size:14px}
   .nav button span{font-size:9px}

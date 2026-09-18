@@ -2,7 +2,7 @@
    ahora nadie las comprobaba: el repo no traia configuracion de Deno, asi que ni
    siquiera se podian resolver los paquetes npm. */
 import { execFileSync } from 'node:child_process';
-const FUNCS = ['bank', 'bank-balance', 'bank-callback', 'bank-config', 'mind', 'mind-config', 'push'];
+const FUNCS = ['bank', 'bank-balance', 'bank-callback', 'bank-config', 'mind', 'mind-config', 'mind-edit', 'push'];
 const cwd = new URL('../supabase/functions/', import.meta.url).pathname;
 
 try {
