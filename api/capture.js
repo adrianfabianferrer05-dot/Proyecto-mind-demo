@@ -1,19 +1,9 @@
-const ALLOWED_KINDS = new Set(['expense', 'income', 'task', 'idea', 'note']);
+import { fallbackParse, KINDS } from '../supabase/functions/_shared/interpret.js';
 
-function classify(text) {
-  const t = String(text || '').trim();
-  const amountMatch = t.match(/(?:€\s*)?(\d+(?:[.,]\d{1,2})?)\s*(?:€|euros?)?/i);
-  const expense = /\b(gast|pag|compr|cena|comida|gasolina|supermerc|mercadona)\w*/i.test(t);
-  const income = /\b(cobrad|ingres|nomina|nómina|sueldo)\w*/i.test(t);
-  const task = /\b(recu[eé]rd|mañana|llamar|hacer|tarea|pendiente)\b/i.test(t);
-  const idea = /\bidea\b/i.test(t);
-
-  return {
-    raw_text: t,
-    kind: income ? 'income' : expense ? 'expense' : task ? 'task' : idea ? 'idea' : 'note',
-    amount: amountMatch ? Number(amountMatch[1].replace(',', '.')) : null,
-  };
-}
+/* Endpoint del Atajo de iPhone. Interpreta con el MISMO parser que la app, no con
+   una version propia peor: antes clasificaba con cuatro regex sueltas y mandaba
+   "me deben 70" a la carpeta equivocada. */
+const ALLOWED_KINDS = new Set(KINDS);
 
 function json(res, status, body) {
   res.status(status).setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -37,16 +27,24 @@ export default async function handler(req, res) {
   const text = String(raw.text || '').trim().slice(0, 4000);
   if (!text) return json(res, 400, { ok: false, error: 'text_required' });
 
-  const parsed = classify(text);
+  const parsed = fallbackParse(text);
   if (raw.kind && ALLOWED_KINDS.has(raw.kind)) parsed.kind = raw.kind;
 
   const row = {
-    raw_text: parsed.raw_text,
+    raw_text: text,
+    title: parsed.title,
     kind: parsed.kind,
     amount: Number.isFinite(parsed.amount) ? parsed.amount : null,
-    currency: 'EUR',
+    currency: parsed.currency || 'EUR',
+    category: parsed.category,
+    due_at: parsed.dueAt,
     source: String(raw.source || 'iphone_shortcut').slice(0, 80),
-    metadata: { shortcut: true, version: 2 },
+    metadata: {
+      shortcut: true,
+      version: 3,
+      interpreter: 'local',
+      ...(parsed.debtDirection ? { debt_direction: parsed.debtDirection } : {}),
+    },
     processed: false,
   };
 

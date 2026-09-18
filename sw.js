@@ -1,9 +1,9 @@
-const CACHE='segunda-mente-v18';
+const CACHE='segunda-mente-v20';
 const STATE_CACHE='segunda-mente-state-v1';
 const PUSH_MARKER='./__push_registered__';
 const BANK_URL='https://dabzmzwnvzoeywyflkoo.supabase.co/functions/v1/bank';
 const BANK_BALANCE_URL='https://dabzmzwnvzoeywyflkoo.supabase.co/functions/v1/bank-balance';
-const ASSETS=['./','./index.html','./app.css?v=7','./app-polish.css?v=7','./app.js?v=14','./app-enhance.js?v=7','./memory-ui.js?v=1','./gym.css?v=1','./gym-enhance.css?v=1','./gym-body.css?v=2','./memory-ui.css?v=1','./gym.js?v=2','./gym-weights.js?v=2','./gym-weights-core.js?v=1','./gym-nav.js?v=1','./gym-anatomy.js?v=2','./gym-body.js?v=2','./activar-notificaciones.html','./manifest.webmanifest','./icon.svg'];
+const ASSETS=['./','./index.html','./app.css?v=7','./app-polish.css?v=7','./app.js?v=14','./app-enhance.js?v=7','./memory-ui.js?v=1','./gym.css?v=1','./gym-enhance.css?v=2','./gym-body.css?v=2','./memory-ui.css?v=1','./gym.js?v=2','./gym-weights.js?v=2','./week.js?v=1','./week.css?v=1','./gym-weights-core.js?v=1','./gym-nav.js?v=1','./gym-anatomy.js?v=2','./gym-body.js?v=2','./activar-notificaciones.html','./manifest.webmanifest','./icon.svg'];
 
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting()));

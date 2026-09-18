@@ -1,0 +1,54 @@
+/* Vista Semana. Mismo lenguaje que el resto: nada de tarjetas flotantes nuevas,
+   la misma tipografia y los mismos tokens de color que Hoy y Archivo. */
+
+/* La nav se auto-dimensiona: antes estaba fijada a 4 columnas en app.css y a 5 en
+   gym.css, y cada modulo nuevo obligaba a tocar el CSS global. */
+.nav{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:1fr}
+
+.week-view{padding-bottom:12px}
+.week-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:2px 0 14px}
+.week-range{font-size:15px;font-weight:720;letter-spacing:-.02em}
+.week-sub{margin-top:3px;color:var(--muted);font-size:11px;line-height:1.4}
+.week-nav{display:flex;gap:6px;flex:0 0 auto}
+.week-arrow{width:36px;height:36px;border:1px solid var(--line);border-radius:12px;background:transparent;
+  display:grid;place-items:center;transition:transform 140ms var(--ease-out),background-color 160ms ease,border-color 160ms ease}
+.week-arrow svg{width:17px;height:17px;fill:none;stroke:var(--muted);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.week-arrow:active{transform:scale(.94);background:var(--surface-2)}
+
+.week-strip{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:18px}
+.week-chip{border:1px solid var(--line);border-radius:15px;background:var(--surface);padding:9px 2px 8px;
+  display:grid;justify-items:center;gap:3px;min-height:62px;align-content:center;
+  transition:transform 140ms var(--ease-out),border-color 180ms ease,background-color 180ms ease}
+.week-chip:active{transform:scale(.95)}
+.week-chip-letter{font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--dim);text-transform:uppercase}
+.week-chip-num{font-size:15px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.week-chip-dots{display:flex;gap:2px;height:4px;align-items:center}
+.week-chip-dots i{width:3px;height:3px;border-radius:50%;background:var(--signal)}
+.week-chip.is-empty .week-chip-num{color:var(--dim)}
+.week-chip.is-today{border-color:rgba(202,255,88,.34);background:linear-gradient(160deg,rgba(202,255,88,.09),var(--surface))}
+.week-chip.is-today .week-chip-letter{color:var(--signal)}
+
+.week-days{display:flex;flex-direction:column;gap:16px}
+.week-day{scroll-margin-top:14px}
+.week-day-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:7px;
+  padding-bottom:7px;border-bottom:1px solid var(--line)}
+.week-day-head h3{margin:0;font-size:12px;font-weight:700;letter-spacing:.01em;text-transform:capitalize;
+  display:flex;align-items:baseline;gap:7px}
+.week-day-head h3 span{color:var(--dim);font-size:11px;font-weight:600;font-variant-numeric:tabular-nums}
+.week-day-head em{font-style:normal;font-size:9px;font-weight:740;letter-spacing:.09em;text-transform:uppercase;color:var(--signal)}
+.week-day.is-past .week-day-head h3{color:var(--muted)}
+.week-day.is-past .rows{opacity:.72}
+.week-day.is-today .week-day-head{border-bottom-color:rgba(202,255,88,.28)}
+.week-empty{color:var(--dim);font-size:11px;padding:9px 2px 4px}
+.row-icon.gym svg{stroke:var(--signal)}
+.week-gym-row .row-side{color:var(--muted);font-size:11px}
+
+@media(max-width:360px){
+  .week-strip{gap:3px}
+  .week-chip{min-height:56px;border-radius:13px}
+  .week-chip-num{font-size:14px}
+  .nav button span{font-size:9px}
+}
+@media(prefers-reduced-motion:reduce){
+  .week-arrow,.week-chip{transition:none}
+}
