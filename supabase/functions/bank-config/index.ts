@@ -83,4 +83,4 @@ Deno.serve(async (req)=>{
     await audit(device.id,"completed");
     return json({ok:true,enabled:true,provider:"enablebanking",stored:true});
   }catch(e){const msg=e instanceof Error?e.message:String(e);console.error("bank-config",msg);try{const h=req.headers.get("authorization")||"";const token=h.toLowerCase().startsWith("bearer ")?h.slice(7).trim():"";if(token){const hash=await sha256Hex(token);const rows=await sql`select id from public.mind_device_sessions where token_hash=${hash} and revoked_at is null limit 1`;if(rows.length)await audit(rows[0].id,"error",msg,400)}}catch{}return json({ok:false,error:"enablebanking_rejected",detail:msg},400)}
-}));
+});
