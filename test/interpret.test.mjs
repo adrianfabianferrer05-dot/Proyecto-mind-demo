@@ -3,7 +3,7 @@
    los tests no dependan del reloj. */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { fallbackParse, extractDueAt, amountFrom, normalizeAmount, KINDS } from '../supabase/functions/_shared/interpret.js';
+import { fallbackParse, extractDueAt, amountFrom, normalizeAmount, KINDS } from '../supabase/functions/mind/interpret.js';
 
 /* Jueves 18 de septiembre de 2026, 12:00 en Madrid (10:00 UTC). */
 const NOW = new Date('2026-09-18T10:00:00Z');

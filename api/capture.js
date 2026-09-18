@@ -1,4 +1,4 @@
-import { fallbackParse, KINDS } from '../supabase/functions/_shared/interpret.js';
+import { fallbackParse, KINDS } from '../supabase/functions/mind/interpret.js';
 
 /* Endpoint del Atajo de iPhone. Interpreta con el MISMO parser que la app, no con
    una version propia peor: antes clasificaba con cuatro regex sueltas y mandaba

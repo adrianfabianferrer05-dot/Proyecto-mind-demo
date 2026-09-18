@@ -1,7 +1,8 @@
+/// <reference path="./edge-runtime.d.ts" />
 import "@supabase/functions-js/edge-runtime.d.ts";
 import postgres from "npm:postgres@3.4.7";
 import { MEMORY_MODEL, memoryText, shouldUseAI } from "./memory.ts";
-import { KINDS, fallbackParse } from "../_shared/interpret.js";
+import { KINDS, fallbackParse } from "./interpret.js";
 
 const ORIGIN = "https://proyecto-mind-demo.vercel.app";
 const DB_URL = Deno.env.get("SUPABASE_DB_URL")!;

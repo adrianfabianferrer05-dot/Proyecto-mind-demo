@@ -53,7 +53,8 @@ input,textarea{caret-color:var(--signal)}
 .page-head{padding:24px 0 18px}
 .page-head h1{font-family:var(--display);font-size:49px;line-height:.92;letter-spacing:-.036em;margin:0;font-weight:600;text-wrap:balance}
 .page-head p{margin:14px 0 0;max-width:39ch;color:var(--muted);font-size:14px;line-height:1.55}
-.date-line{font-size:12px;color:var(--muted);margin-top:13px;text-transform:capitalize}
+.date-line{font-size:12px;color:var(--muted);margin-top:13px;text-transform:none}
+.date-line::first-letter{text-transform:uppercase}
 .offline-banner{display:none;margin-top:14px;padding:11px 12px;border:1px solid rgba(233,191,120,.15);border-radius:14px;background:rgba(233,191,120,.055);color:#d9bd91;font-size:11px;line-height:1.45}.offline-banner.show{display:block}
 .home-orbit{position:absolute;top:84px;right:-74px;width:240px;height:240px;pointer-events:none;opacity:.78}.home-orbit svg{width:100%;height:100%;overflow:visible}.home-orbit circle{fill:none;stroke:rgba(202,255,88,.075);stroke-width:1}.home-orbit path{fill:none;stroke:rgba(133,128,189,.16);stroke-width:1.1;stroke-linecap:round;stroke-dasharray:4 8;animation:traceDrift 16s linear infinite}@keyframes traceDrift{to{stroke-dashoffset:-120}}
 .focus{position:relative;margin-top:7px;padding:18px 0 20px;border-top:1px solid var(--line-strong);border-bottom:1px solid var(--line)}

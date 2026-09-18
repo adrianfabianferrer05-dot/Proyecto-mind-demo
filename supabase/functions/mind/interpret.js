@@ -2,10 +2,11 @@
    sin depender de ningún modelo. Es el respaldo cuando no hay clave de OpenAI y el
    primer paso que decide si hace falta llamar al modelo siquiera.
 
-   Vive aquí, en JavaScript puro, porque lo usan tres entornos distintos: la Edge
-   Function `mind` (Deno), el endpoint del Atajo de iPhone (Node en Vercel) y los
-   tests (Node). Antes había tres copias divergentes y el Atajo se quedaba con la
-   peor de las tres. Una sola copia, una sola verdad.
+   Vive aquí, junto a la función que lo posee, en JavaScript puro, porque lo usan
+   tres entornos distintos: la Edge Function `mind` (Deno), el endpoint del Atajo
+   de iPhone (Node en Vercel) y los tests (Node). Antes había tres copias
+   divergentes y el Atajo se quedaba con la peor. Una sola copia física, una sola
+   verdad, y se despliega junto a su función sin rutas que escapen del paquete.
 
    Todo lo de aquí es puro y determinista: mismas entradas, mismas salidas. Por eso
    se puede testear. `now` es inyectable para que las fechas no dependan del reloj
