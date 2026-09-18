@@ -72,9 +72,11 @@ Deno.serve(async(req=>{
     const appId=String(body.appId||"").trim(),privateKey=normalizePem(String(body.privateKey||""));
     if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(appId))return json({ok:false,error:"invalid_app_id",detail:"Revisa el Application ID de Enable Banking."},400);
     if(privateKey.length<500||privateKey.length>20000||!privateKey.includes("PRIVATE KEY"))return json({ok:false,error:"invalid_private_key",detail:"El archivo seleccionado no parece contener la private key de Enable Banking."},400);
-    const check=await validate(appId,privateKey);
+    // Guarda primero la configuración cifrada. La validación remota se hará al cargar
+    // la lista de bancos; esto evita bloquear el alta por un error transitorio del proveedor.
+    pemToDer(privateKey);
     await storeSecret(APP_ID_NAME,appId,"Enable Banking application ID for Segunda Mente");
     await storeSecret(KEY_NAME,privateKey,"Enable Banking private RSA key for Segunda Mente");
-    return json({ok:true,enabled:true,provider:"enablebanking",application:check.application});
+    return json({ok:true,enabled:true,provider:"enablebanking",stored:true});
   }catch(e){console.error("bank-config",e instanceof Error?e.message:String(e));return json({ok:false,error:"enablebanking_rejected",detail:e instanceof Error?e.message:"No pude validar Enable Banking"},400)}
 }));
