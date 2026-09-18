@@ -1,0 +1,15 @@
+/* El estado que faltaba: entre soltar el micro y ver el texto hay unos segundos en
+   los que la app está trabajando. Sin nada que lo cuente, parece colgada. */
+
+.capture-stage.thinking:before{opacity:.9}
+.capture-stage.thinking .mind-orb{border-color:rgba(202,255,88,.4);color:var(--signal)}
+.capture-stage.thinking .mind-orb:after{content:"";position:absolute;inset:-9px;border-radius:50%;
+  border:1.5px solid transparent;border-top-color:var(--signal);animation:voiceSpin 900ms linear infinite}
+@keyframes voiceSpin{to{transform:rotate(1turn)}}
+
+/* Grabando, el núcleo lleva un pulso; el texto del contador ya dice lo demás. */
+.capture-stage.listening .mind-orb svg{opacity:.9}
+
+@media(prefers-reduced-motion:reduce){
+  .capture-stage.thinking .mind-orb:after{animation:none;border-color:rgba(202,255,88,.4)}
+}
