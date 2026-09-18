@@ -12,6 +12,7 @@ const cors={"Access-Control-Allow-Origin":ORIGIN,"Access-Control-Allow-Headers":
 const json=(data:unknown,status=200)=>new Response(JSON.stringify(data),{status,headers:{...cors,"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store"}});
 async function sha256Hex(value:string){const d=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(value));return [...new Uint8Array(d)].map(b=>b.toString(16).padStart(2,"0")).join("")}
 async function auth(req:Request){const h=req.headers.get("authorization")||"";const token=h.toLowerCase().startsWith("bearer ")?h.slice(7).trim():"";if(!token||token.length<24)return null;const hash=await sha256Hex(token);const rows=await sql`select id,label from public.mind_device_sessions where token_hash=${hash} and revoked_at is null limit 1`;if(!rows.length)return null;await sql`update public.mind_device_sessions set last_seen_at=now() where id=${rows[0].id}`;return rows[0]}
+async function audit(deviceId:string,stage:string,detail:string|null=null,httpStatus:number|null=null){try{await sql`insert into public.bank_setup_events(device_session_id,stage,detail,http_status) values(${deviceId}::uuid,${stage},${detail},${httpStatus})`}catch{}}
 async function secret(name:string){const r=await sql`select decrypted_secret from vault.decrypted_secrets where name=${name} and decrypted_secret is not null limit 1`;return r[0]?.decrypted_secret||null}
 async function hasSecret(name:string){return !!(await secret(name))}
 async function storeSecret(name:string,value:string,description:string){const r=await sql`select id from vault.decrypted_secrets where name=${name} limit 1`;if(r.length)await sql`select vault.update_secret(${r[0].id}::uuid,${value},${name},${description})`;else await sql`select vault.create_secret(${value},${name},${description})`}
@@ -67,16 +68,19 @@ Deno.serve(async(req=>{
   try{
     if(req.method==="GET")return json({ok:true,enabled:(await hasSecret(APP_ID_NAME))&&(await hasSecret(KEY_NAME)),provider:"enablebanking"});
     if(req.method!=="POST")return json({ok:false,error:"method_not_allowed"},405);
+    await audit(device.id,"request_received");
     const body=await req.json().catch(()=>({})),action=String(body.action||"set");
     if(action!=="set")return json({ok:false,error:"unknown_action"},400);
     const appId=String(body.appId||"").trim(),privateKey=normalizePem(String(body.privateKey||""));
+    await audit(device.id,"payload_parsed","appId="+appId+" keyChars="+privateKey.length);
     if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(appId))return json({ok:false,error:"invalid_app_id",detail:"Revisa el Application ID de Enable Banking."},400);
     if(privateKey.length<500||privateKey.length>20000||!privateKey.includes("PRIVATE KEY"))return json({ok:false,error:"invalid_private_key",detail:"El archivo seleccionado no parece contener la private key de Enable Banking."},400);
     // Guarda primero la configuración cifrada. La validación remota se hará al cargar
     // la lista de bancos; esto evita bloquear el alta por un error transitorio del proveedor.
-    pemToDer(privateKey);
-    await storeSecret(APP_ID_NAME,appId,"Enable Banking application ID for Segunda Mente");
-    await storeSecret(KEY_NAME,privateKey,"Enable Banking private RSA key for Segunda Mente");
+    pemToDer(privateKey);await audit(device.id,"pem_ok");
+    await storeSecret(APP_ID_NAME,appId,"Enable Banking application ID for Segunda Mente");await audit(device.id,"app_id_saved");
+    await storeSecret(KEY_NAME,privateKey,"Enable Banking private RSA key for Segunda Mente");await audit(device.id,"private_key_saved");
+    await audit(device.id,"completed");
     return json({ok:true,enabled:true,provider:"enablebanking",stored:true});
-  }catch(e){console.error("bank-config",e instanceof Error?e.message:String(e));return json({ok:false,error:"enablebanking_rejected",detail:e instanceof Error?e.message:"No pude validar Enable Banking"},400)}
+  }catch(e){const msg=e instanceof Error?e.message:String(e);console.error("bank-config",msg);try{const h=req.headers.get("authorization")||"";const token=h.toLowerCase().startsWith("bearer ")?h.slice(7).trim():"";if(token){const hash=await sha256Hex(token);const rows=await sql`select id from public.mind_device_sessions where token_hash=${hash} and revoked_at is null limit 1`;if(rows.length)await audit(rows[0].id,"error",msg,400)}}catch{}return json({ok:false,error:"enablebanking_rejected",detail:msg},400)}
 }));
