@@ -1,6 +1,8 @@
-const CACHE='segunda-mente-v17';
+const CACHE='segunda-mente-v18';
 const STATE_CACHE='segunda-mente-state-v1';
 const PUSH_MARKER='./__push_registered__';
+const BANK_URL='https://dabzmzwnvzoeywyflkoo.supabase.co/functions/v1/bank';
+const BANK_BALANCE_URL='https://dabzmzwnvzoeywyflkoo.supabase.co/functions/v1/bank-balance';
 const ASSETS=['./','./index.html','./app.css?v=7','./app-polish.css?v=7','./app.js?v=14','./app-enhance.js?v=7','./memory-ui.js?v=1','./gym.css?v=1','./gym-enhance.css?v=1','./gym-body.css?v=2','./memory-ui.css?v=1','./gym.js?v=2','./gym-weights.js?v=2','./gym-weights-core.js?v=1','./gym-nav.js?v=1','./gym-anatomy.js?v=2','./gym-body.js?v=2','./activar-notificaciones.html','./manifest.webmanifest','./icon.svg'];
 
 self.addEventListener('install',event=>{
@@ -42,7 +44,21 @@ self.addEventListener('notificationclick',event=>{
 });
 
 self.addEventListener('fetch',event=>{
-  const request=event.request;if(request.method!=='GET')return;
+  const request=event.request;
+  if(request.method==='POST'&&request.url===BANK_URL){
+    event.respondWith((async()=>{
+      try{
+        const raw=await request.clone().text();let body={};try{body=raw?JSON.parse(raw):{}}catch{}
+        if(body?.action==='balance'){
+          const authorization=request.headers.get('authorization')||'';
+          return fetch(BANK_BALANCE_URL,{method:'POST',cache:'no-store',headers:{Authorization:authorization,'Content-Type':'application/json'},body:'{}'});
+        }
+      }catch{}
+      return fetch(request);
+    })());
+    return;
+  }
+  if(request.method!=='GET')return;
   const url=new URL(request.url);if(url.origin!==self.location.origin)return;
   event.respondWith((async()=>{
     try{
