@@ -1,6 +1,4 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "//": "Segunda Mente es un sitio estatico: HTML, CSS y JS sueltos en la raiz, mas la funcion de api/. No hay nada que compilar. Vercel lo despliega asi solo si no encuentra motivos para creer lo contrario, y package.json le da dos: un script llamado `build` (por eso aqui se llama `check`) y unas dependencias que instalar. La unica que hay es playwright, que es de desarrollo y se descarga un navegador entero, asi que aqui no se instala nada. Esto no es cosmetico: cuando se anadio package.json, Vercel paso a tratar el repositorio como un proyecto de Node y fallaron doce despliegues seguidos mientras el iPhone seguia servido por la ultima version buena.",
-  "framework": null,
-  "installCommand": "echo \"sin dependencias: Segunda Mente no compila nada\""
+  "installCommand": "echo \"Segunda Mente no instala nada: es un sitio estatico\""
 }

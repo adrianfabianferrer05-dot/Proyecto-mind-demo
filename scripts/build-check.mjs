@@ -94,6 +94,13 @@ if (!existsSync(join(ROOT, 'vercel.json'))) {
     if ('outputDirectory' in v) errors.push('vercel.json no deberia definir outputDirectory: sin build, lo que se sirve es la raiz');
     if (!v.installCommand || /\b(npm|yarn|pnpm|bun)\b/.test(v.installCommand))
       errors.push('vercel.json: installCommand tiene que existir y no instalar nada');
+    /* Vercel valida este fichero y rechaza el despliegue entero si encuentra algo
+       que no reconoce, asi que no admite claves inventadas para dejar comentarios.
+       Desde aqui no hay forma de leer sus registros para confirmarlo, pero tampoco
+       hay motivo para arriesgarse: lo que haya que explicar se explica aqui. */
+    const inventadas = Object.keys(v).filter((k) => k === '//' || k.startsWith('_') || k.startsWith('#'));
+    if (inventadas.length)
+      errors.push(`vercel.json lleva claves que no son configuracion (${inventadas.join(', ')}): Vercel valida este fichero y puede rechazarlo entero`);
     /* Y si algun dia api/ necesita una dependencia de verdad, esto tiene que saltar
        antes de que el despliegue se quede sin ella. */
     const conImports = readdirSync(join(ROOT, 'api'))
