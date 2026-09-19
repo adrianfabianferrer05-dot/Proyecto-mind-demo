@@ -75,7 +75,7 @@
     const moneyOut = document.getElementById('moneyOut');
     if (net) net.textContent = hasBalance ? euro(effectiveBalance) : '—';
     if (caption) caption.textContent = hasBalance
-      ? (estimated ? 'Saldo estimado · lo apuntado se descuenta al instante' : 'Saldo disponible en Cajamar')
+      ? (estimated ? 'Saldo bancario estimado · lo apuntado se descuenta al instante' : 'Saldo bancario disponible · Cajamar')
       : 'Cajamar conectado · saldo pendiente';
     if (moneyIn) moneyIn.textContent = euro(effectiveIn);
     if (moneyOut) moneyOut.textContent = euro(effectiveOut);
