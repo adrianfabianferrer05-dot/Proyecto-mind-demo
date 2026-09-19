@@ -136,7 +136,18 @@ async function run(width) {
     if (url.includes('mind-config')) return route.fulfill({ json: { ok: true, aiConfigured: true } });
     if (url.includes('bank-config')) return route.fulfill({ json: { ok: true, configured: false } });
     if (url.includes('/bank')) return route.fulfill({ json: { ok: true, connected: false, accounts: [], transactions: [] } });
-    if (url.includes('/mind')) return route.fulfill({ json: { ok: true, captures, aiEnabled: true } });
+    if (url.includes('/mind')) {
+      if (req.method() === 'POST') {
+        const body = req.postDataJSON() || {};
+        if (body.action === 'capture') {
+          const c = { id: 'sync-' + captures.length, raw_text: body.text, title: body.text, kind: 'note', amount: null, currency: 'EUR', category: null, due_at: null, created_at: new Date().toISOString(), metadata: {}, completed_at: null, archived_at: null };
+          captures = [c, ...captures];
+          return route.fulfill({ status: 201, json: { ok: true, capture: c, ai: false } });
+        }
+        return route.fulfill({ json: { ok: true } });
+      }
+      return route.fulfill({ json: { ok: true, captures, aiEnabled: true } });
+    }
     return route.fulfill({ json: { ok: true } });
   });
 
@@ -286,6 +297,36 @@ async function run(width) {
   await page.locator('#voiceOrb').click({ force: true });
   await page.waitForTimeout(1200);
   step('un toque sin querer no sube nada', uploads.length === 0);
+
+  /* ── Sin red: lo que sueltas no se pierde ──────────────────────────────── */
+  await page.fill('#captureText', '');
+  await ctx.setOffline(true);
+  await page.evaluate(() => window.dispatchEvent(new Event('offline')));
+  await page.waitForTimeout(400);
+  /* El aviso de "sin conexion" vive en Hoy, asi que hay que estar en Hoy para verlo. */
+  await page.locator('.nav button[data-view="hoy"]').click();
+  await page.waitForTimeout(400);
+  step('sin red se avisa antes de que lo notes', await page.locator('#offlineBanner').isVisible());
+  await page.locator('.nav button[data-view="mente"]').click();
+  await page.waitForTimeout(400);
+  await page.fill('#captureText', 'Sin red pero lo suelto igual');
+  await page.locator('#captureSend').click();
+  await page.waitForTimeout(700);
+  step('lo capturado sin red se guarda aqui', (await page.locator('#mindRecent .row-title').allTextContents()).includes('Sin red pero lo suelto igual'));
+  step('y se ve que esta pendiente de sincronizar', (await page.locator('#mindRecent .row.pending-sync').count()) > 0);
+  step('la cuenta de pendientes sube', (await page.locator('#queueState').textContent()) === '1');
+  const guardadoLocal = await page.evaluate(() => JSON.parse(localStorage.getItem('sm_pending_captures_v3') || '[]').length);
+  step('sobrevive a cerrar la app', guardadoLocal === 1, `en localStorage: ${guardadoLocal}`);
+
+  await ctx.setOffline(false);
+  await page.evaluate(() => window.dispatchEvent(new Event('online')));
+  await page.waitForTimeout(1500);
+  step('al volver la red se sincroniza sola', (await page.locator('#queueState').textContent()) === '0');
+  step('y deja de estar marcada como pendiente', (await page.locator('#mindRecent .row.pending-sync').count()) === 0);
+
+  /* ── Dinero en formato español ─────────────────────────────────────────── */
+  const dinero = await page.evaluate(() => euro(1234.56));
+  step('el dinero se escribe como en España', dinero.replace(/ /g, ' ') === '1.234,56 €', dinero);
 
   /* ── iPhone: zonas tactiles y ancho ────────────────────────────────────── */
   await page.locator('.nav button[data-view="semana"]').click();

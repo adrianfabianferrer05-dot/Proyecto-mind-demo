@@ -8,7 +8,10 @@ const token=()=>localStorage.getItem(TOKEN_KEY)||'';
 const readJSON=(k,f)=>{try{return JSON.parse(localStorage.getItem(k))??f}catch{return f}};
 const writeJSON=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
-const euro=n=>new Intl.NumberFormat('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:2}).format(Number(n)||0);
+/* `useGrouping:'always'` no sobra: el estandar de es-ES no separa los miles hasta
+   cinco cifras, asi que 1.234,56 € salia como "1234,56 €" y parecia otro numero.
+   Aqui se quiere el punto siempre, como lo escribe un banco español. */
+const euro=n=>new Intl.NumberFormat('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:2,useGrouping:'always'}).format(Number(n)||0);
 const dateFmt=new Intl.DateTimeFormat('es-ES',{day:'numeric',month:'short'}),timeFmt=new Intl.DateTimeFormat('es-ES',{hour:'2-digit',minute:'2-digit'});
 const safeDate=v=>{const d=new Date(v);return Number.isFinite(d.getTime())?d:null};
 const createdLabel=t=>{const d=safeDate(t);return d?`${dateFmt.format(d)} · ${timeFmt.format(d)}`:'Ahora'};
