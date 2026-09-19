@@ -1,79 +1,59 @@
-import { fallbackParse, KINDS } from '../supabase/functions/mind/interpret.js';
+/* /api/capture — PUERTA ANTIGUA. Aquí ya no se interpreta ni se guarda nada: esto
+   sólo reenvía a la Edge Function `capture`, que es la implementación real.
 
-/* Endpoint del Atajo de iPhone. Interpreta con el MISMO parser que la app, no con
-   una version propia peor: antes clasificaba con cuatro regex sueltas y mandaba
-   "me deben 70" a la carpeta equivocada. */
-const ALLOWED_KINDS = new Set(KINDS);
+   Por qué esta y no la otra:
 
-function json(res, status, body) {
-  res.status(status).setHeader('Content-Type', 'application/json; charset=utf-8');
-  res.setHeader('Cache-Control', 'no-store');
-  return res.end(JSON.stringify(body));
-}
+   Había dos puertas para el Atajo de iPhone, y aunque desde hace poco compartían
+   intérprete seguían siendo dos implementaciones. La canónica es la de Supabase:
+
+   - Menos piezas. Supabase ya es crítico (base de datos, avisos, banco, gym, voz).
+     Vercel sirve ficheros estáticos; que además tenga que estar vivo para que
+     funcione el Atajo es un punto de fallo de más, y uno que se cae por su cuenta.
+   - Mejor autenticación. Esta versión necesitaba `SUPABASE_SERVICE_ROLE_KEY` en
+     Vercel: la credencial más peligrosa del proyecto —se salta RLS entera— metida
+     en un sitio más, para un endpoint que nadie usaba. La Edge Function usa un
+     token propio guardado en el Vault y lo compara en tiempo constante.
+   - Un solo intérprete de verdad. `capture` usa el mismo `interpret.js` que `mind`
+     y, si hay clave de OpenAI, el mismo modelo. Esta versión sólo sabía del
+     intérprete local: el Atajo entendía peor que la app por el mero hecho de entrar
+     por otra puerta.
+
+   Que el Atajo ya usa la de Supabase no es una suposición: las dos últimas capturas
+   reales traen `version: 6` e `interpreter`, campos que sólo escribe la Edge
+   Function. Ninguna captura tiene la firma que escribía este fichero.
+
+   Se deja como proxy y no se borra para no romper nada si alguna copia del Atajo
+   sigue apuntando aquí. Sin lógica propia: pasa la cabecera de autorización tal
+   cual y devuelve la respuesta tal cual. Cuando no quede ningún cliente apuntando a
+   esta ruta, el fichero puede desaparecer y no se pierde nada.
+
+   Al quedarse sin lógica, Vercel ya no necesita `CAPTURE_TOKEN`, `SUPABASE_URL` ni
+   `SUPABASE_SERVICE_ROLE_KEY`. Se pueden borrar de sus variables de entorno. */
+const DESTINO = 'https://dabzmzwnvzoeywyflkoo.supabase.co/functions/v1/capture';
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return json(res, 405, { ok: false, error: 'method_not_allowed' });
-
-  const expected = process.env.CAPTURE_TOKEN;
-  const supplied = req.headers.authorization?.replace(/^Bearer\s+/i, '') || req.headers['x-capture-token'];
-  if (!expected || !supplied || supplied !== expected) {
-    return json(res, 401, { ok: false, error: 'unauthorized' });
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-store');
+  if (req.method !== 'POST') {
+    res.status(405);
+    return res.end(JSON.stringify({ ok: false, error: 'method_not_allowed' }));
   }
 
-  const raw = typeof req.body === 'string'
-    ? (() => { try { return JSON.parse(req.body); } catch { return { text: req.body }; } })()
-    : (req.body || {});
-
-  const text = String(raw.text || '').trim().slice(0, 4000);
-  if (!text) return json(res, 400, { ok: false, error: 'text_required' });
-
-  const parsed = fallbackParse(text);
-  if (raw.kind && ALLOWED_KINDS.has(raw.kind)) parsed.kind = raw.kind;
-
-  const row = {
-    raw_text: text,
-    title: parsed.title,
-    kind: parsed.kind,
-    amount: Number.isFinite(parsed.amount) ? parsed.amount : null,
-    currency: parsed.currency || 'EUR',
-    category: parsed.category,
-    due_at: parsed.dueAt,
-    source: String(raw.source || 'iphone_shortcut').slice(0, 80),
-    metadata: {
-      shortcut: true,
-      version: 3,
-      interpreter: 'local',
-      ...(parsed.debtDirection ? { debt_direction: parsed.debtDirection } : {}),
-    },
-    processed: false,
-  };
-
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return json(res, 503, { ok: false, error: 'storage_not_configured' });
+  /* Vercel puede entregar el cuerpo ya parseado o como texto; se reenvía tal cual
+     llegue, sin mirarlo: validar aquí seria volver a tener dos implementaciones. */
+  const cuerpo = typeof req.body === 'string' ? req.body : JSON.stringify(req.body ?? {});
+  const cabeceras = { 'Content-Type': 'application/json' };
+  if (req.headers.authorization) cabeceras.Authorization = req.headers.authorization;
+  if (req.headers['x-capture-token']) cabeceras['x-capture-token'] = req.headers['x-capture-token'];
 
   try {
-    const r = await fetch(`${url}/rest/v1/mind_captures`, {
-      method: 'POST',
-      headers: {
-        apikey: key,
-        Authorization: `Bearer ${key}`,
-        'Content-Type': 'application/json',
-        Prefer: 'return=representation',
-      },
-      body: JSON.stringify(row),
-    });
-
-    if (!r.ok) {
-      const detail = await r.text();
-      console.error('capture_store_failed', r.status, detail);
-      return json(res, 502, { ok: false, error: 'storage_failed' });
-    }
-
-    const saved = await r.json();
-    return json(res, 201, { ok: true, capture: saved[0] || row });
+    const r = await fetch(DESTINO, { method: 'POST', headers: cabeceras, body: cuerpo });
+    const texto = await r.text();
+    res.status(r.status);
+    return res.end(texto || '{}');
   } catch (error) {
-    console.error('capture_store_exception', error);
-    return json(res, 502, { ok: false, error: 'storage_unreachable' });
+    console.error('capture_proxy_failed', error);
+    res.status(502);
+    return res.end(JSON.stringify({ ok: false, error: 'upstream_unreachable' }));
   }
 }

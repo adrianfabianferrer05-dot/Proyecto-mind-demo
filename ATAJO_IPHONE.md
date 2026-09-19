@@ -4,9 +4,16 @@ Google Sheets y `Abrir URL` quedan fuera del flujo.
 
 ## Flujo definitivo
 
-`Botón Acción → escribir o dictar → POST /api/capture → Segunda Mente`
+`Botón Acción → escribir o dictar → POST a la Edge Function capture → Segunda Mente`
 
-La petición se guarda en `mind_captures` y el servidor clasifica inicialmente la entrada como gasto, ingreso, tarea, idea o nota. La futura capa de interpretación puede sustituir esta clasificación sin cambiar el Atajo.
+La petición se guarda en `mind_captures` y la interpreta **el mismo intérprete que la app**: si hay clave de OpenAI conectada, el mismo modelo; si no, el mismo `interpret.js`. Lo que dictas al Atajo y lo que escribes en la app se entienden igual, que antes no era el caso.
+
+### Dónde apunta
+
+- **Canónico:** `https://dabzmzwnvzoeywyflkoo.supabase.co/functions/v1/capture`
+- **Antiguo:** `https://TU-DOMINIO/api/capture` sigue funcionando, pero ya no hace nada por su cuenta: sólo reenvía a la anterior. Si tu Atajo apunta aquí, funciona igual; cuando puedas, cámbialo al canónico y te quitas un salto y una dependencia de Vercel.
+
+Por qué la de Supabase: Supabase ya es crítico (base de datos, avisos, banco, gym, voz) y Vercel sólo sirve ficheros estáticos. Que además tuviera que estar vivo para que funcione el Atajo era un punto de fallo de más. Y la versión de Vercel necesitaba la `SUPABASE_SERVICE_ROLE_KEY` —la credencial que se salta RLS entera— para un endpoint que ya no usaba nadie.
 
 ## Atajo recomendado
 
@@ -15,7 +22,7 @@ La petición se guarda en `mind_captures` y el servidor clasifica inicialmente l
 3. En `Escribir`, usa **Pedir entrada** (texto). En `Hablar`, usa **Dictar texto**.
 4. Guarda el resultado de cualquiera de las dos ramas en una variable `Captura`.
 5. Añade **Obtener contenido de URL**:
-   - URL: `https://TU-DOMINIO/api/capture`
+   - URL: `https://dabzmzwnvzoeywyflkoo.supabase.co/functions/v1/capture`
    - Método: `POST`
    - Cabecera `Authorization`: `Bearer TU_CAPTURE_TOKEN`
    - Cuerpo JSON: `{ "text": Captura }`
@@ -24,15 +31,13 @@ La petición se guarda en `mind_captures` y el servidor clasifica inicialmente l
 
 El Atajo no abre Safari ni la PWA. Solo envía la captura en segundo plano.
 
-## Variables privadas de Vercel
+## Dónde vive el token
 
-Configurar solo en servidor:
+En el **Vault de Supabase**, con el nombre `segunda_mente_capture_token`. La Edge Function lo lee de ahí y lo compara en tiempo constante; no aparece en el código ni viaja al navegador. En el Atajo va la misma cadena, en la cabecera `Authorization`.
 
-- `CAPTURE_TOKEN`: secreto largo y aleatorio que también se copia en el Atajo.
-- `SUPABASE_URL`: URL del proyecto dedicado a Segunda Mente.
-- `SUPABASE_SERVICE_ROLE_KEY`: clave de servidor; nunca se copia al iPhone ni al frontend.
+Vercel ya no necesita nada para esto: `CAPTURE_TOKEN`, `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` se pueden borrar de sus variables de entorno, porque `/api/capture` se quedó sin lógica propia.
 
-Aplicar `supabase/migrations/001_mind_captures.sql` al proyecto dedicado antes de probar el endpoint.
+El esquema se levanta con `supabase/migrations/20260916181839_baseline.sql` (ver `docs/MIGRACIONES.md`).
 
 ## Ejemplos
 

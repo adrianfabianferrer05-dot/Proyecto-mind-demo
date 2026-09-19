@@ -47,11 +47,16 @@ for (const f of files.filter((f) => extname(f) === '.js' || extname(f) === '.ts'
   });
 }
 
-/* 4. Nada puede referenciar la Edge Function `capture`, que ya no existe. */
-for (const f of files.filter((f) => ['.js', '.html', '.md'].includes(extname(f)))) {
-  if (f.includes('/supabase/functions/')) continue;
+/* 4. El navegador no habla con la puerta del Atajo. `capture` se autentica con el
+      token del Atajo, no con el del dispositivo: si la PWA la llamara, el token
+      acabaria en el cliente. La regla decia antes que esa funcion "ya no existe",
+      y era falso: es la puerta canonica del Atajo desde el 17 de septiembre. */
+const CLIENTE = files.filter(
+  (f) => ['.js', '.html'].includes(extname(f)) && !f.includes('/supabase/functions/') && !f.includes('/api/') && !f.includes('/scripts/') && !f.includes('/test/'),
+);
+for (const f of CLIENTE) {
   if (/functions\/v1\/capture\b/.test(readFileSync(f, 'utf8')))
-    problems.push(`${rel(f)}: referencia a functions/v1/capture, que ya no existe`);
+    problems.push(`${rel(f)}: el cliente no debe llamar a functions/v1/capture (es la puerta del Atajo, con otro token)`);
 }
 
 if (problems.length) {
