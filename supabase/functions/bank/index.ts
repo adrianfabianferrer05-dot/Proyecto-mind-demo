@@ -26,7 +26,8 @@ async function jwt(){const appId=await secret(APP_ID_NAME),pem=await secret(KEY_
 async function eb(path:string,init:RequestInit={}){
   const token=await jwt();
   const r=await fetch(BASE+path,{...init,headers:{Authorization:"Bearer "+token,Accept:"application/json","Content-Type":"application/json",...(init.headers||{})}});
-  const raw=await r.text();let out:any={};try{out=raw?JSON.parse(raw):{}}catch{}
+  const raw=await r.text();let out:any={};try{out=raw?JSON.parse(raw):{}}
+  catch{}
   if(!r.ok){
     const detail=typeof out?.detail==="string"?out.detail:typeof out?.message==="string"?out.message:typeof out?.error==="string"?out.error:raw||("Enable Banking "+r.status);
     const e:any=new Error(String(detail).slice(0,300));e.status=r.status;e.providerCode=typeof out?.error==="string"?out.error:null;throw e;
@@ -133,7 +134,7 @@ async function syncConnection(conn:any,deviceId:string,force=false){
       await audit(deviceId,"bank_reauth_required",msg,status);
       return {...(await summary(conn.id)),needs_reauth:true,sync_partial:true};
     }
-    await sql`update public.bank_connections set sync_error=${msg.slice(0,300)},updated_at=now() where id=${conn.id}`;await audit(device.id,"bank_sync_error",msg,status);throw e;
+    await sql`update public.bank_connections set sync_error=${msg.slice(0,300)},updated_at=now() where id=${conn.id}`;await audit(deviceId,"bank_sync_error",msg,status);throw e;
   }
 }
 
