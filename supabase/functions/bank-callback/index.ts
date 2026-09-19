@@ -35,10 +35,10 @@ Deno.serve(async(req)=>{
   const origin=req.headers.get("origin");if(origin&&origin!==ORIGIN)return json({ok:false,error:"origin_not_allowed"},403);
   if(req.method!=="POST")return json({ok:false,error:"method_not_allowed"},405);
   try{
-    const body=await req.json().catch(()=>({})),code=String(body.code||"").trim(),state=String(body.state||"").trim();if(!code)return json({ok:false,error:"missing_code",detail:"Enable Banking no devolvió el código de autorización."},400);
-    let rows:any[]=[];
-    if(state)rows=await sql`select * from public.bank_connections where provider='enablebanking' and status='PENDING_AUTHORIZATION' and revoked_at is null and provider_accounts->>'state'=${state} order by created_at desc limit 1`;
-    else{rows=await sql`select * from public.bank_connections where provider='enablebanking' and status='PENDING_AUTHORIZATION' and revoked_at is null and created_at>now()-interval '30 minutes' order by created_at desc limit 2`;if(rows.length!==1)return json({ok:false,error:"missing_state",detail:"No puedo identificar de forma segura qué autorización terminar."},400)}
+    const body=await req.json().catch(()=>({})),code=String(body.code||"").trim(),state=String(body.state||"").trim();
+    if(!code)return json({ok:false,error:"missing_code",detail:"Enable Banking no devolvió el código de autorización."},400);
+    if(!state)return json({ok:false,error:"missing_state",detail:"Falta el identificador seguro de la autorización bancaria."},400);
+    const rows=await sql`select * from public.bank_connections where provider='enablebanking' and status='PENDING_AUTHORIZATION' and revoked_at is null and provider_accounts->>'state'=${state} and created_at>now()-interval '30 minutes' order by created_at desc limit 1`;
     if(!rows.length)return json({ok:false,error:"pending_connection_not_found",detail:"No encuentro una autorización bancaria pendiente que coincida."},404);
     const conn=rows[0],session=await eb("/sessions",{method:"POST",body:JSON.stringify({code})}),sessionId=String(session.session_id||"");if(!sessionId)return json({ok:false,error:"missing_session_id",detail:"Enable Banking no devolvió session_id."},502);const accounts=Array.isArray(session.accounts)?session.accounts:[];
     const purpose=String(conn.provider_accounts?.purpose||"initial");
