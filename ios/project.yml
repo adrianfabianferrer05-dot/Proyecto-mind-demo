@@ -1,0 +1,60 @@
+name: SegundaMente
+options:
+  createIntermediateGroups: true
+  minimumXcodeGenVersion: 2.42.0
+settings:
+  base:
+    SWIFT_VERSION: 5.10
+    IPHONEOS_DEPLOYMENT_TARGET: 17.0
+    MARKETING_VERSION: 1.0.0
+    CURRENT_PROJECT_VERSION: 1
+    CODE_SIGN_STYLE: Automatic
+
+targets:
+  SegundaMente:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: Shared
+      - path: App
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: Segunda Mente
+        LSApplicationCategoryType: public.app-category.productivity
+        NSMicrophoneUsageDescription: Segunda Mente usa el micrófono cuando eliges hablar en la app.
+        UIApplicationSupportsIndirectInputEvents: true
+        CFBundleURLTypes:
+          - CFBundleURLName: com.adrianfabianferrer.segundamente
+            CFBundleURLSchemes:
+              - segundamente
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.adrianfabianferrer.segundamente
+        CODE_SIGN_ENTITLEMENTS: App/SegundaMente.entitlements
+        TARGETED_DEVICE_FAMILY: "1"
+    dependencies:
+      - target: SegundaMenteWidgets
+        embed: true
+
+  SegundaMenteWidgets:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: Shared
+      - path: Widgets
+    info:
+      path: Widgets/Info.plist
+      properties:
+        CFBundleDisplayName: Segunda Mente Widgets
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.adrianfabianferrer.segundamente.widgets
+        CODE_SIGN_ENTITLEMENTS: Widgets/SegundaMenteWidgets.entitlements
+        APPLICATION_EXTENSION_API_ONLY: YES
+        SKIP_INSTALL: YES
+        TARGETED_DEVICE_FAMILY: "1"

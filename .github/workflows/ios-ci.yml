@@ -1,0 +1,37 @@
+name: iOS CI
+
+on:
+  push:
+    paths:
+      - 'ios/**'
+      - 'supabase/functions/ios-activate/**'
+      - '.github/workflows/ios-ci.yml'
+  pull_request:
+    paths:
+      - 'ios/**'
+      - 'supabase/functions/ios-activate/**'
+      - '.github/workflows/ios-ci.yml'
+
+jobs:
+  build-ios:
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Generate Xcode project
+        working-directory: ios
+        run: xcodegen generate
+      - name: Build app and WidgetKit extension without signing
+        working-directory: ios
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project SegundaMente.xcodeproj \
+            -target SegundaMente \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build | xcpretty
