@@ -72,7 +72,7 @@ enum AppRoute: String, CaseIterable {
         case .today: return "if(window.go){go('hoy')}"
         case .mind: return "if(window.go){go('mente',{focusComposer:true})}"
         case .money: return "if(window.go){go('dinero')}"
-        case .gym: return "document.querySelector('.nav button[data-view=\\"gym\\"]')?.click()"
+        case .gym: return "document.querySelector('.nav button[data-view=\"gym\"]')?.click()"
         case .week: return "document.querySelector('[data-week-open]')?.click() || (window.go&&go('hoy'))"
         }
     }
