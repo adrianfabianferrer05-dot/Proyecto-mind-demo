@@ -1,0 +1,15 @@
+# Lo que se despliega es la app: HTML, CSS, JS, iconos, el manifest y api/.
+# Todo lo demas pertenece al repositorio, no al sitio, y no tiene por que servirse
+# publicamente. `api/capture.js` ya no importa nada de supabase/ (es un proxy), asi
+# que esa carpeta puede quedarse fuera sin romper nada.
+#
+# Cuidado al tocar esto: `npm run build` comprueba que nada de lo que carga
+# index.html acabe excluido por error.
+supabase/
+scripts/
+test/
+docs/
+.github/
+node_modules/
+*.md
+*.txt

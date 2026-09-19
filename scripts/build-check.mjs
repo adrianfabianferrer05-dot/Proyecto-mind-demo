@@ -3,7 +3,7 @@
    si. Justo esta clase de desajuste fue lo que hizo que una version nueva se viera
    igual que la vieja en el iPhone: el SW seguia sirviendo assets cacheados con una
    version que ya no coincidia. */
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 const ROOT = new URL('..', import.meta.url).pathname;
@@ -69,6 +69,49 @@ for (const copy of copies) {
   if (!existsSync(join(ROOT, copy))) errors.push(`falta ${copy}: copialo de ${source}`);
   else if (read(copy) !== read(source))
     errors.push(`${copy} se ha separado de ${source}: el atajo y la app interpretarian distinto (copialo otra vez)`);
+}
+
+/* Vercel: sin `vercel.json` este sitio no se despliega. Tiene package.json pero no
+   se compila nada, asi que Vercel deduce que es un proyecto de Node, ejecuta el
+   build y busca una carpeta de salida que no existe. Paso de verdad: doce commits
+   seguidos fallaron y produccion se quedo congelada. */
+if (!existsSync(join(ROOT, 'vercel.json'))) {
+  errors.push('falta vercel.json: sin el, Vercel busca una carpeta de salida que no existe y el despliegue falla');
+} else {
+  try {
+    const v = JSON.parse(read('vercel.json'));
+    if (v.outputDirectory !== '.') errors.push(`vercel.json: outputDirectory deberia ser "." y es ${JSON.stringify(v.outputDirectory)}`);
+    if (v.buildCommand !== '') errors.push('vercel.json: buildCommand tiene que estar vacio, aqui no se compila nada');
+    /* Y tampoco hay que instalar nada: la unica dependencia del repo es playwright,
+       que es de desarrollo y se descarga un navegador entero al instalarse. `api/` no
+       importa nada, asi que el despliegue no necesita node_modules. */
+    if (v.installCommand !== '') errors.push('vercel.json: installCommand tiene que estar vacio, el despliegue no necesita dependencias');
+    const conImports = readdirSync(join(ROOT, 'api'))
+      .filter((f) => f.endsWith('.js'))
+      .filter((f) => /^\s*(import\s|.*\brequire\()/m.test(read(join('api', f))));
+    if (conImports.length)
+      errors.push(`api/${conImports.join(', api/')} importa dependencias, pero vercel.json no instala nada`);
+  } catch (e) {
+    errors.push(`vercel.json no es JSON valido: ${e.message}`);
+  }
+}
+
+/* Y que .vercelignore no se lleve por delante algo que la app carga. */
+if (existsSync(join(ROOT, '.vercelignore'))) {
+  const patrones = read('.vercelignore')
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => l && !l.startsWith('#'));
+  const excluido = (ruta) =>
+    patrones.some((p) =>
+      p.endsWith('/') ? ruta.startsWith(p) : p.startsWith('*.') ? ruta.endsWith(p.slice(1)) : ruta === p,
+    );
+  for (const r of new Set(refs.map(clean))) {
+    if (excluido(r)) errors.push(`.vercelignore excluye ${r}, que index.html necesita`);
+  }
+  for (const a of assets.map(clean)) {
+    if (excluido(a)) errors.push(`.vercelignore excluye ${a}, que el service worker precachea`);
+  }
 }
 
 /* El manifest tiene que ser JSON valido y sus iconos existir. */

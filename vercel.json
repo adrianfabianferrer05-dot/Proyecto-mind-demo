@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "//": "Segunda Mente es un sitio estatico: HTML, CSS y JS sueltos en la raiz, mas la funcion de api/. No hay nada que compilar ni ninguna dependencia que instalar (api/capture.js no importa nada). Sin este fichero, Vercel ve un package.json, deduce que es un proyecto de Node, ejecuta `npm run build`, instala las devDependencies -playwright, que se descarga un navegador entero- y luego busca una carpeta de salida que no existe: el despliegue falla. Fallo asi doce veces seguidas desde que se anadio el package.json, y produccion se quedo congelada sin que nadie se enterara.",
+  "framework": null,
+  "buildCommand": "",
+  "installCommand": "",
+  "outputDirectory": ".",
+  "cleanUrls": false,
+  "trailingSlash": false
+}

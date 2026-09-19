@@ -17,17 +17,34 @@ const MAX_BYTES = 12 * 1024 * 1024; // ~10 min de voz en m4a; de sobra para solt
 /* El primero es el bueno; el segundo existe desde siempre y sirve de red por si la
    cuenta todavia no tiene acceso al nuevo. */
 const MODELS = ["gpt-4o-mini-transcribe", "whisper-1"];
+/* La extension del fichero no es decorativa: OpenAI valida que este en su lista
+   antes de mirar el contenido. Las admitidas son flac, m4a, mp3, mp4, mpeg, mpga,
+   oga, ogg, wav y webm; cualquier otra se rechaza aunque el audio sea perfecto.
+   Por eso `audio/aac` va a "m4a" y no a "aac": aac no esta en la lista, y el
+   decodificador de OpenAI reconoce el formato por el contenido de todas formas.
+
+   Lo que manda de verdad cada navegador:
+     iOS Safari  -> audio/mp4 (AAC dentro de MP4), a veces con ;codecs=mp4a.40.2
+     Chrome      -> audio/webm;codecs=opus, y audio/mp4;codecs=opus en versiones nuevas
+     Firefox     -> audio/ogg;codecs=opus
+   El `;codecs=...` se recorta antes de buscar aqui. Lo que no reconozcamos cae en
+   "m4a", que es lo que manda un iPhone y esta en la lista. */
 const EXT: Record<string, string> = {
   "audio/mp4": "m4a",
   "audio/m4a": "m4a",
   "audio/x-m4a": "m4a",
-  "audio/aac": "aac",
+  "audio/aac": "m4a",
   "audio/mpeg": "mp3",
+  "audio/mp3": "mp3",
   "audio/webm": "webm",
   "audio/ogg": "ogg",
+  "audio/oga": "oga",
   "audio/wav": "wav",
   "audio/x-wav": "wav",
+  "audio/wave": "wav",
+  "audio/vnd.wave": "wav",
   "audio/flac": "flac",
+  "audio/x-flac": "flac",
 };
 
 const sql = postgres(Deno.env.get("SUPABASE_DB_URL")!, { prepare: false, max: 1 });
