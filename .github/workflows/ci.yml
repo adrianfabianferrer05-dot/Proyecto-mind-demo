@@ -11,7 +11,13 @@ jobs:
         with: { node-version: '22' }
       - uses: denoland/setup-deno@v2
         with: { deno-version: v2.x }
+      - run: npm ci || npm install
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run build
       - run: npm test
+      # La auditoria de interfaz necesita un navegador de verdad: es la unica forma
+      # de comprobar que una hoja abre, que una fila cambia de dia, que el microfono
+      # se suelta al terminar y que nada mide menos de 44 px en un iPhone.
+      - run: npx playwright install --with-deps chromium
+      - run: npm run audit:ui

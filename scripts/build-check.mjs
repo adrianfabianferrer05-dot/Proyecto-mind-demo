@@ -58,6 +58,19 @@ for (const c of chained) {
     errors.push(`desajuste de version en ${f}: gym-weights.js pide "${c.split('?')[1]}" y sw.js cachea "${inSw.split('?')[1]}"`);
 }
 
+/* Un solo interprete. La app y el atajo del iPhone son dos puertas distintas, pero
+   tienen que entender lo mismo: cuando `capture` llevaba su propia copia, "1.234,56 €"
+   se guardaba como 234,56 por el atajo y bien por la app. Como cada Edge Function se
+   despliega con sus propios ficheros, la copia es inevitable; lo que no puede pasar es
+   que se separen sin que nadie se entere. */
+const interpreters = ['supabase/functions/mind/interpret.js', 'supabase/functions/capture/interpret.js'];
+const [source, ...copies] = interpreters;
+for (const copy of copies) {
+  if (!existsSync(join(ROOT, copy))) errors.push(`falta ${copy}: copialo de ${source}`);
+  else if (read(copy) !== read(source))
+    errors.push(`${copy} se ha separado de ${source}: el atajo y la app interpretarian distinto (copialo otra vez)`);
+}
+
 /* El manifest tiene que ser JSON valido y sus iconos existir. */
 try {
   const man = JSON.parse(read('manifest.webmanifest'));

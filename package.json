@@ -8,10 +8,14 @@
     "test": "node --test test/*.test.mjs",
     "lint": "node scripts/lint.mjs",
     "build": "node scripts/build-check.mjs",
-    "verify": "npm run lint && npm run typecheck && npm run build && npm test",
-    "typecheck": "node scripts/typecheck.mjs"
+    "verify": "npm run lint && npm run typecheck && npm run build && npm test && npm run audit:ui",
+    "typecheck": "node scripts/typecheck.mjs",
+    "audit:ui": "node scripts/ui-audit.mjs"
   },
   "engines": {
     "node": ">=20"
+  },
+  "devDependencies": {
+    "playwright": "^1.63.0"
   }
 }
