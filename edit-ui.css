@@ -47,8 +47,14 @@ input.edit-input[type=datetime-local]::-webkit-calendar-picker-indicator{filter:
 .edit-actions .save{background:var(--signal);color:#090b0c;border-color:transparent}
 .edit-actions .save:disabled{opacity:.6}
 
-.edit-archive{width:100%;min-height:46px;margin-top:8px;border:0;border-radius:15px;background:transparent;color:var(--dim);font:inherit;font-size:11px;font-weight:700}
-.edit-archive:active{color:var(--ink)}
+/* Apartar y borrar viven juntos pero no se parecen: archivar se deshace, borrar no.
+   Por eso borrar pide un segundo toque en vez de un dialogo que se acepta sin leer. */
+.edit-remove{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.edit-archive,.edit-delete{min-height:46px;border:0;border-radius:15px;background:transparent;
+  color:var(--dim);font:inherit;font-size:11px;font-weight:700;transition:color 140ms ease,background-color 140ms ease}
+.edit-archive:active{color:var(--ink);background:var(--surface-2)}
+.edit-delete:active{color:#ff8f8f}
+.edit-delete.is-armed{background:rgba(255,107,107,.12);color:#ff8f8f;font-size:10.5px}
 
 #prefsBody.is-off .edit-row:not(:first-child){opacity:.38}
 

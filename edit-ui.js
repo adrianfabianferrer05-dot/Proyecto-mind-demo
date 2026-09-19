@@ -18,6 +18,17 @@
 
   let editing = null; // captura en edición; null cuando se está creando
   let chosen = 'task';
+  let armed = false; // borrar pedido una vez, esperando la confirmación
+  let disarmTimer = null;
+
+  function disarmDelete() {
+    clearTimeout(disarmTimer);
+    armed = false;
+    const b = u$('editDelete');
+    if (!b) return;
+    b.classList.remove('is-armed');
+    b.textContent = 'Borrar';
+  }
 
   /* Las 9:00 son la hora por defecto de cualquier día. Sólo se mueve cuando el día
      elegido es hoy y las nueve ya han pasado: entonces la siguiente hora en punto,
@@ -62,7 +73,8 @@
     const isTask = chosen === 'task' && !!capture;
     u$('editDoneRow').hidden = !isTask;
     setDone(!!capture?.completed_at);
-    u$('editArchive').hidden = !capture;
+    u$('editRemove').hidden = !capture;
+    disarmDelete();
     u$('editSave').textContent = capture ? 'Guardar' : 'Añadir';
   }
 
@@ -86,6 +98,7 @@
     sheet.classList.remove('show');
     sheet.setAttribute('aria-hidden', 'true');
     document.body.classList.remove('sheet-open');
+    disarmDelete();
     editing = null;
   }
 
@@ -143,7 +156,10 @@
         <button type="button" class="cancel press" id="editCancel">Cancelar</button>
         <button type="button" class="save press" id="editSave">Guardar</button>
       </div>
-      <button type="button" class="edit-archive press" id="editArchive">Archivar</button>
+      <div class="edit-remove" id="editRemove">
+        <button type="button" class="edit-archive press" id="editArchive">Archivar</button>
+        <button type="button" class="edit-delete press" id="editDelete">Borrar</button>
+      </div>
       <button type="button" class="sheet-close press" id="editClose">Cerrar</button>
     </div>`;
     document.body.appendChild(sheet);
@@ -183,7 +199,31 @@
       setDone(next);
       complete(editing.id);
     };
-    u$('editArchive').onclick = () => {
+    u$('editDelete').onclick = async () => {
+    if (!editing) return;
+    /* Borrar no tiene vuelta atras, asi que pide un segundo toque en vez de una
+       ventana de confirmacion que se acepta sin leer. */
+    if (!armed) {
+      armed = true;
+      const b = u$('editDelete');
+      b.classList.add('is-armed');
+      b.textContent = 'Toca otra vez para borrarlo';
+      disarmTimer = setTimeout(disarmDelete, 4000);
+      return;
+    }
+    const id = editing.id;
+    disarmDelete();
+    try {
+      await editApi('capture_delete', { id });
+      dropCapture(id);
+      render();
+      close();
+      toast('Borrado');
+    } catch (e) {
+      toast(e.message);
+    }
+  };
+  u$('editArchive').onclick = () => {
       if (!editing) return;
       archiveItem(editing.id);
       close();
@@ -206,8 +246,10 @@
   }
 
   /* Puertas de entrada para el resto de la app. */
-  window.openCaptureEditor = (id) => {
-    const c = state.captures.find((x) => x.id === id);
+  window.openCaptureEditor = (target) => {
+    /* Admite un id (lo normal) o el registro entero: un recuerdo archivado ya no
+       esta en la lista de la app, y aun asi se tiene que poder abrir y borrar. */
+    const c = typeof target === 'string' ? state.captures.find((x) => x.id === target) : target;
     if (!c) return;
     if (c.metadata?.pending) return toast('Esto aún no se ha sincronizado');
     open({ capture: c });

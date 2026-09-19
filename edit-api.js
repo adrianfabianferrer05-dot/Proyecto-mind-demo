@@ -42,6 +42,14 @@ function mergeCapture(capture) {
   if (typeof writeJSON === 'function' && typeof CACHE_KEY !== 'undefined') writeJSON(CACHE_KEY, state.captures);
 }
 
+/* Borrar de verdad quita la fila de todas partes a la vez; si solo se quitara del
+   servidor, seguiria apareciendo aqui hasta la siguiente sincronizacion. */
+function dropCapture(id) {
+  if (typeof state === 'undefined') return;
+  state.captures = state.captures.filter((c) => c.id !== id);
+  if (typeof writeJSON === 'function' && typeof CACHE_KEY !== 'undefined') writeJSON(CACHE_KEY, state.captures);
+}
+
 /* <input type="datetime-local"> habla en hora local sin zona; estas dos funciones
    son el puente con el ISO que guarda el servidor. */
 function toLocalInput(iso) {

@@ -15,10 +15,25 @@ function memoryDate(v){
   return new Intl.DateTimeFormat('es-ES',{day:'numeric',month:'short',year:'numeric'}).format(d);
 }
 
+/* La busqueda por significado devuelve tambien lo archivado: archivar es quitarlo
+   de en medio, no olvidarlo. Pero entonces hay que decirlo, o parece que algo que
+   apartaste sigue activo. */
+let memoryHits=new Map();
+
 function renderMemoryResults(items){
   const box=document.getElementById('memoryResults');if(!box)return;
+  memoryHits=new Map((items||[]).map(m=>[String(m.id),m]));
   if(!items?.length){box.innerHTML='<div class="memory-empty">No encontré recuerdos suficientemente relacionados.</div>';return}
-  box.innerHTML=items.map(m=>`<button class="memory-hit press" data-memory-id="${String(m.id).replace(/"/g,'&quot;')}"><span class="memory-hit-top"><b>${esc(m.title||m.raw_text||'Recuerdo')}</b><em>${Math.round((Number(m.similarity)||0)*100)}%</em></span><span class="memory-hit-meta">${esc(typeLabel(m.kind))} · ${esc(memoryDate(m.created_at))}${m.category?' · '+esc(m.category):''}</span><span class="memory-hit-raw">${esc(m.raw_text||'')}</span></button>`).join('');
+  box.innerHTML=items.map(m=>`<button class="memory-hit press" data-memory-id="${String(m.id).replace(/"/g,'&quot;')}"><span class="memory-hit-top"><b>${esc(m.title||m.raw_text||'Recuerdo')}</b><em>${Math.round((Number(m.similarity)||0)*100)}%</em></span><span class="memory-hit-meta">${esc(typeLabel(m.kind))} · ${esc(memoryDate(m.created_at))}${m.category?' · '+esc(m.category):''}${m.archived_at?' · <i class="memory-hit-archived">archivado</i>':''}</span><span class="memory-hit-raw">${esc(m.raw_text||'')}</span></button>`).join('');
+}
+
+/* Un resultado de busqueda era un boton que no hacia nada. Ahora abre el mismo
+   editor que en Semana: cambiar el titulo, la fecha, el tipo, o borrarlo. */
+function openMemory(id){
+  const m=memoryHits.get(String(id))||state.captures.find(c=>c.id===id);
+  if(!m)return;
+  if(typeof openCaptureEditor==='function')openCaptureEditor(m);
+  else toast('Abre Semana para editarlo');
 }
 
 async function runMemorySearch(){
@@ -65,6 +80,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(search)search.onclick=runMemorySearch;
   if(input)input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();runMemorySearch()}});
   document.addEventListener('click',e=>{const b=e.target.closest?.('[data-correct]');if(b)openCorrection(b.dataset.correct)});
+  document.addEventListener('click',e=>{const b=e.target.closest?.('[data-memory-id]');if(b)openMemory(b.dataset.memoryId)});
   document.getElementById('correctionClose')?.addEventListener('click',closeCorrection);
   document.getElementById('correctionCancel')?.addEventListener('click',closeCorrection);
   document.getElementById('correctionSave')?.addEventListener('click',submitCorrection);

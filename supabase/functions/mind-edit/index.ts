@@ -5,6 +5,8 @@
 
    - capture_update : cambiar titulo, fecha o tipo de algo ya capturado
    - capture_create : crear una tarea o un plan con los campos rellenos
+   - capture_delete : borrarlo de verdad (archivar solo lo aparta, y lo archivado
+                      sigue saliendo al buscar por significado)
    - prefs_get / prefs_set : preferencias de avisos (encendido, por tipo, antelacion
                              y silencio nocturno; no hay preferencia de gym porque
                              hoy ningun entreno encola avisos)
@@ -111,6 +113,18 @@ Deno.serve(async (req: Request) => {
         returning ${COLS}`;
       await reschedule(rows[0]);
       return json({ ok: true, capture: rows[0] }, 201);
+    }
+
+    /* Borrado de verdad. Archivar es reversible y sigue en la memoria; esto no.
+       La cola de avisos cuelga de la captura con ON DELETE CASCADE, y el
+       movimiento bancario conciliado se queda con la referencia a null en vez de
+       desaparecer con ella. */
+    if (action === "capture_delete") {
+      const id = String(body.id || "");
+      if (!UUID.test(id)) return json({ ok: false, error: "invalid_id" }, 400);
+      const rows = await sql`delete from public.mind_captures where id=${id}::uuid returning id`;
+      if (!rows.length) return json({ ok: false, error: "not_found" }, 404);
+      return json({ ok: true, deleted: rows[0].id });
     }
 
     if (action === "prefs_get") {

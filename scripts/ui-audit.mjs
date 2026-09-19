@@ -123,6 +123,12 @@ async function run(width) {
         captures = [c, ...captures];
         return route.fulfill({ status: 201, json: { ok: true, capture: c } });
       }
+      if (body.action === 'capture_delete') {
+        const antes = captures.length;
+        captures = captures.filter((x) => x.id !== body.id);
+        if (captures.length === antes) return route.fulfill({ status: 404, json: { ok: false, error: 'not_found' } });
+        return route.fulfill({ json: { ok: true, deleted: body.id } });
+      }
       if (body.action === 'capture_update') {
         const c = captures.find((x) => x.id === body.id);
         Object.assign(c, { title: body.title ?? c.title, kind: body.kind ?? c.kind, due_at: body.dueAt === undefined ? c.due_at : body.dueAt });
@@ -139,6 +145,9 @@ async function run(width) {
     if (url.includes('/mind')) {
       if (req.method() === 'POST') {
         const body = req.postDataJSON() || {};
+        if (body.action === 'recall') {
+          return route.fulfill({ json: { ok: true, memories: [{ ...captures[captures.length - 1], similarity: 0.82, archived_at: new Date().toISOString() }] } });
+        }
         if (body.action === 'capture') {
           const c = { id: 'sync-' + captures.length, raw_text: body.text, title: body.text, kind: 'note', amount: null, currency: 'EUR', category: null, due_at: null, created_at: new Date().toISOString(), metadata: {}, completed_at: null, archived_at: null };
           captures = [c, ...captures];
@@ -297,6 +306,40 @@ async function run(width) {
   await page.locator('#voiceOrb').click({ force: true });
   await page.waitForTimeout(1200);
   step('un toque sin querer no sube nada', uploads.length === 0);
+
+  /* ── Borrar de verdad (dos toques) y recuerdos que se pueden abrir ─────── */
+  await page.locator('.nav button[data-view="semana"]').click();
+  await page.waitForTimeout(500);
+  await page.locator(`#weekDay${idx} [data-week-add]`).first().click();
+  await page.waitForTimeout(400);
+  await page.fill('#editTitle', 'Esto lo voy a borrar');
+  await page.locator('#editSave').click();
+  await page.waitForTimeout(700);
+  await page.locator(`#weekDay${idx} .row[data-id]`).first().click();
+  await page.waitForTimeout(400);
+  await page.locator('#editDelete').click();
+  await page.waitForTimeout(250);
+  step('borrar pide un segundo toque', (await page.locator('#editDelete').textContent()).includes('otra vez'));
+  step('y la hoja sigue abierta', await page.locator('#editSheet').evaluate((e) => e.classList.contains('show')));
+  const antesDeBorrar = edits.filter((c) => c.action === 'capture_delete').length;
+  step('con un solo toque no se borra nada', antesDeBorrar === 0);
+  await page.locator('#editDelete').click();
+  await page.waitForTimeout(800);
+  step('al segundo toque se borra', edits.filter((c) => c.action === 'capture_delete').length === 1);
+  step('y desaparece de la semana', !(await page.locator(`#weekDay${idx} .row-title`).allTextContents()).includes('Esto lo voy a borrar'));
+
+  await page.locator('.nav button[data-view="mente"]').click();
+  await page.waitForTimeout(400);
+  await page.fill('#memoryQuery', 'lo de ayer');
+  await page.locator('#memorySearchBtn').click();
+  await page.waitForTimeout(900);
+  step('la busqueda por significado devuelve algo', (await page.locator('.memory-hit').count()) > 0);
+  step('un recuerdo archivado lo dice', (await page.locator('.memory-hit-archived').count()) > 0);
+  await page.locator('.memory-hit').first().click();
+  await page.waitForTimeout(500);
+  step('tocar un recuerdo lo abre para editarlo', await page.locator('#editSheet').evaluate((e) => e.classList.contains('show')));
+  await page.locator('#editCancel').click();
+  await page.waitForTimeout(300);
 
   /* ── Sin red: lo que sueltas no se pierde ──────────────────────────────── */
   await page.fill('#captureText', '');

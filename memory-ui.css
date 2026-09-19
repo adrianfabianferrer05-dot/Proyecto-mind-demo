@@ -21,3 +21,7 @@
 .correction-actions button{min-height:46px;border-radius:14px;border:1px solid rgba(255,255,255,.08);font:inherit;font-size:11px;font-weight:700}
 .correction-actions .cancel{background:#111417;color:#c4c8cb}.correction-actions .save{background:#caff58;color:#090b0c;border-color:transparent}
 @media (prefers-reduced-motion:reduce){.memory-hit,.correct-action{transition:none!important}}
+
+/* Un recuerdo que apartaste sigue apareciendo al buscar por significado: archivar
+   no es olvidar. Pero se dice, para que no parezca que sigue activo. */
+.memory-hit-archived{font-style:normal;color:#8e9499;opacity:.85}
