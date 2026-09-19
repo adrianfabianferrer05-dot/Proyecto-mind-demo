@@ -32,6 +32,17 @@ test('la reconexion reemplaza la sesion del mismo enlace y conserva su cuenta', 
   assert.match(callback, /provider_account_id=\$\{providerId\}/);
 });
 
+test('la fila temporal de reconexion no reutiliza el session id unico', () => {
+  assert.match(callback, /completed_session_id:sessionId/);
+  assert.match(callback, /set status='REVOKED',provider_accounts=\$\{sql\.json\(completed\)\},revoked_at=now\(\)/);
+  assert.doesNotMatch(callback, /set requisition_id=\$\{sessionId\},status='REVOKED'/);
+});
+
+test('una sesion renovada puede devolver cuentas como ids de texto', () => {
+  assert.match(bank, /function accountUid\(a:any\)\{return typeof a==="string"\?a:/);
+  assert.match(callback, /function uid\(a:any\)\{return typeof a==="string"\?a:/);
+});
+
 test('los gastos manuales posteriores al ultimo saldo se descuentan temporalmente', () => {
   assert.match(today, /pendingManualMoney/);
   assert.match(today, /d > mark/);
