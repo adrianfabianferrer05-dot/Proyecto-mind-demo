@@ -37,5 +37,5 @@ test('los gastos manuales posteriores al ultimo saldo se descuentan temporalment
   assert.match(today, /d > mark/);
   assert.match(today, /effectiveBalance = baseBalance \+ pendingIn - pendingOut/);
   assert.match(today, /a\.available_balance != null \? a\.available_balance : a\.current_balance/);
-  assert.match(today, /Saldo estimado/);
+  assert.match(today, /Saldo bancario estimado/);
 });
