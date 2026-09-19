@@ -8,7 +8,13 @@ const sql=postgres(DB_URL,{prepare:false,max:1});
 const BASE="https://api.enablebanking.com";
 const APP_ID_NAME="segunda_mente_enablebanking_app_id";
 const KEY_NAME="segunda_mente_enablebanking_private_key";
-const FRESH_MS=8*3600e3;
+/* Cada cuanto se vuelve a preguntar al banco. Estaban ocho horas, que para una app
+   que abres varias veces al dia significa abrirla y ver lo de ayer. Veinte minutos
+   es el equilibrio: Enable Banking limita los accesos no atendidos a cuatro al dia,
+   pero estos si lo son -los dispara que TU abras la app-, y aun asi el techo real
+   son tres consultas por hora aunque la abras cada minuto. El boton de actualizar
+   sigue saltandose esto con force. */
+const FRESH_MS=20*60e3;
 const TX_DAYS=45;
 const MAX_PAGES=50;
 

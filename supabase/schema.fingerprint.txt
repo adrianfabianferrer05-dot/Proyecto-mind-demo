@@ -12,6 +12,15 @@ col|bank_accounts|last_synced_at|timestamp with time zone|NULL|-
 col|bank_accounts|owner_name|text|NULL|-
 col|bank_accounts|provider_account_id|text|NOT NULL|-
 col|bank_accounts|updated_at|timestamp with time zone|NOT NULL|now()
+col|bank_category_rules|category|text|NOT NULL|-
+col|bank_category_rules|confidence|numeric(4,3)|NOT NULL|1.0
+col|bank_category_rules|created_at|timestamp with time zone|NOT NULL|now()
+col|bank_category_rules|hits|integer|NOT NULL|0
+col|bank_category_rules|id|uuid|NOT NULL|gen_random_uuid()
+col|bank_category_rules|match_value|text|NOT NULL|-
+col|bank_category_rules|reason|text|NULL|-
+col|bank_category_rules|source|text|NOT NULL|'manual'::text
+col|bank_category_rules|updated_at|timestamp with time zone|NOT NULL|now()
 col|bank_connections|balance_synced_at|timestamp with time zone|NULL|-
 col|bank_connections|consent_expires_at|timestamp with time zone|NULL|-
 col|bank_connections|created_at|timestamp with time zone|NOT NULL|now()
@@ -34,14 +43,26 @@ col|bank_setup_events|device_session_id|uuid|NULL|-
 col|bank_setup_events|http_status|integer|NULL|-
 col|bank_setup_events|id|bigint|NOT NULL|nextval('bank_setup_events_id_seq'::regclass)
 col|bank_setup_events|stage|text|NOT NULL|-
+col|bank_subscriptions|amount|numeric(12,2)|NULL|-
+col|bank_subscriptions|created_at|timestamp with time zone|NOT NULL|now()
+col|bank_subscriptions|id|uuid|NOT NULL|gen_random_uuid()
+col|bank_subscriptions|last_seen|date|NULL|-
+col|bank_subscriptions|merchant_normalized|text|NOT NULL|-
+col|bank_subscriptions|months|integer|NOT NULL|0
+col|bank_subscriptions|status|text|NOT NULL|'possible'::text
+col|bank_subscriptions|updated_at|timestamp with time zone|NOT NULL|now()
 col|bank_transactions|amount|numeric|NOT NULL|-
 col|bank_transactions|bank_account_id|uuid|NOT NULL|-
 col|bank_transactions|booked_at|timestamp with time zone|NULL|-
 col|bank_transactions|category|text|NULL|-
+col|bank_transactions|classification_confidence|numeric(4,3)|NULL|-
+col|bank_transactions|classification_source|text|NULL|-
+col|bank_transactions|classified_at|timestamp with time zone|NULL|-
 col|bank_transactions|created_at|timestamp with time zone|NOT NULL|now()
 col|bank_transactions|currency|text|NOT NULL|'EUR'::text
 col|bank_transactions|description|text|NULL|-
 col|bank_transactions|id|uuid|NOT NULL|gen_random_uuid()
+col|bank_transactions|merchant_normalized|text|NULL|-
 col|bank_transactions|merchant|text|NULL|-
 col|bank_transactions|provider_transaction_id|text|NOT NULL|-
 col|bank_transactions|raw|jsonb|NOT NULL|'{}'::jsonb
@@ -131,6 +152,10 @@ col|mind_devices|label|text|NOT NULL|'iPhone'::text
 col|mind_devices|last_seen_at|timestamp with time zone|NULL|-
 col|mind_devices|token_hash|text|NOT NULL|-
 col|mind_devices|updated_at|timestamp with time zone|NOT NULL|now()
+col|money_categories|active|boolean|NOT NULL|true
+col|money_categories|created_at|timestamp with time zone|NOT NULL|now()
+col|money_categories|name|text|NOT NULL|-
+col|money_categories|position|integer|NOT NULL|100
 col|notification_log|body|text|NOT NULL|-
 col|notification_log|created_at|timestamp with time zone|NOT NULL|now()
 col|notification_log|failure_count|integer|NOT NULL|0
@@ -182,15 +207,24 @@ col|push_subscriptions|user_agent|text|NULL|-
 con|bank_accounts|bank_accounts_connection_id_fkey|FOREIGN KEY (connection_id) REFERENCES bank_connections(id) ON DELETE CASCADE
 con|bank_accounts|bank_accounts_connection_id_provider_account_id_key|UNIQUE (connection_id, provider_account_id)
 con|bank_accounts|bank_accounts_pkey|PRIMARY KEY (id)
+con|bank_category_rules|bank_category_rules_confidence_check|CHECK (((confidence >= (0)::numeric) AND (confidence <= (1)::numeric)))
+con|bank_category_rules|bank_category_rules_match_value_key|UNIQUE (match_value)
+con|bank_category_rules|bank_category_rules_pkey|PRIMARY KEY (id)
+con|bank_category_rules|bank_category_rules_source_check|CHECK ((source = ANY (ARRAY['manual'::text, 'ai'::text])))
 con|bank_connections|bank_connections_device_session_id_fkey|FOREIGN KEY (device_session_id) REFERENCES mind_device_sessions(id) ON DELETE CASCADE
 con|bank_connections|bank_connections_pkey|PRIMARY KEY (id)
 con|bank_connections|bank_connections_requisition_id_key|UNIQUE (requisition_id)
 con|bank_setup_events|bank_setup_events_device_session_id_fkey|FOREIGN KEY (device_session_id) REFERENCES mind_device_sessions(id) ON DELETE CASCADE
 con|bank_setup_events|bank_setup_events_pkey|PRIMARY KEY (id)
+con|bank_subscriptions|bank_subscriptions_merchant_normalized_key|UNIQUE (merchant_normalized)
+con|bank_subscriptions|bank_subscriptions_pkey|PRIMARY KEY (id)
+con|bank_subscriptions|bank_subscriptions_status_check|CHECK ((status = ANY (ARRAY['possible'::text, 'confirmed'::text, 'ignored'::text])))
 con|bank_transactions|bank_transactions_bank_account_id_fkey|FOREIGN KEY (bank_account_id) REFERENCES bank_accounts(id) ON DELETE CASCADE
 con|bank_transactions|bank_transactions_bank_account_id_provider_transaction_id_key|UNIQUE (bank_account_id, provider_transaction_id)
+con|bank_transactions|bank_transactions_confidence_chk|CHECK (((classification_confidence IS NULL) OR ((classification_confidence >= (0)::numeric) AND (classification_confidence <= (1)::numeric))))
 con|bank_transactions|bank_transactions_pkey|PRIMARY KEY (id)
 con|bank_transactions|bank_transactions_reconciled_capture_id_fkey|FOREIGN KEY (reconciled_capture_id) REFERENCES mind_captures(id) ON DELETE SET NULL
+con|bank_transactions|bank_transactions_source_chk|CHECK (((classification_source IS NULL) OR (classification_source = ANY (ARRAY['rule'::text, 'learned_rule'::text, 'ai'::text, 'manual'::text]))))
 con|gym_body_log|gym_body_log_pkey|PRIMARY KEY (id)
 con|gym_body_log|gym_body_log_weight_kg_check|CHECK (((weight_kg >= (20)::numeric) AND (weight_kg <= (400)::numeric)))
 con|gym_days|gym_days_pkey|PRIMARY KEY (id)
@@ -226,6 +260,7 @@ con|mind_device_sessions|mind_device_sessions_token_hash_key|UNIQUE (token_hash)
 con|mind_devices|mind_devices_pkey|PRIMARY KEY (id)
 con|mind_devices|mind_devices_token_hash_check|CHECK ((length(token_hash) = 64))
 con|mind_devices|mind_devices_token_hash_key|UNIQUE (token_hash)
+con|money_categories|money_categories_pkey|PRIMARY KEY (name)
 con|notification_log|notification_log_pkey|PRIMARY KEY (id)
 con|notification_preferences|notification_preferences_id_check|CHECK ((id = 1))
 con|notification_preferences|notification_preferences_lead_minutes_check|CHECK (((lead_minutes >= 0) AND (lead_minutes <= 1440)))
@@ -258,6 +293,9 @@ idx|CREATE INDEX bank_connections_status_created_idx ON public.bank_connections 
 idx|CREATE INDEX bank_connections_status_idx ON public.bank_connections USING btree (status) WHERE (revoked_at IS NULL)
 idx|CREATE INDEX bank_setup_events_created_idx ON public.bank_setup_events USING btree (created_at DESC)
 idx|CREATE INDEX bank_transactions_account_date_idx ON public.bank_transactions USING btree (bank_account_id, booked_at DESC)
+idx|CREATE INDEX bank_transactions_booked_idx ON public.bank_transactions USING btree (booked_at DESC)
+idx|CREATE INDEX bank_transactions_category_idx ON public.bank_transactions USING btree (category)
+idx|CREATE INDEX bank_transactions_merchant_idx ON public.bank_transactions USING btree (merchant_normalized)
 idx|CREATE INDEX bank_transactions_reconciled_capture_idx ON public.bank_transactions USING btree (reconciled_capture_id) WHERE (reconciled_capture_id IS NOT NULL)
 idx|CREATE INDEX bank_transactions_unreconciled_idx ON public.bank_transactions USING btree (booked_at DESC) WHERE (reconciled_capture_id IS NULL)
 idx|CREATE INDEX gym_body_log_measured_idx ON public.gym_body_log USING btree (measured_at DESC)
@@ -285,11 +323,16 @@ idx|CREATE INDEX push_subscriptions_active_idx ON public.push_subscriptions USIN
 idx|CREATE INDEX push_subscriptions_device_idx ON public.push_subscriptions USING btree (device_id) WHERE (device_id IS NOT NULL)
 idx|CREATE UNIQUE INDEX bank_accounts_connection_id_provider_account_id_key ON public.bank_accounts USING btree (connection_id, provider_account_id)
 idx|CREATE UNIQUE INDEX bank_accounts_pkey ON public.bank_accounts USING btree (id)
+idx|CREATE UNIQUE INDEX bank_category_rules_match_value_key ON public.bank_category_rules USING btree (match_value)
+idx|CREATE UNIQUE INDEX bank_category_rules_pkey ON public.bank_category_rules USING btree (id)
 idx|CREATE UNIQUE INDEX bank_connections_pkey ON public.bank_connections USING btree (id)
 idx|CREATE UNIQUE INDEX bank_connections_requisition_id_key ON public.bank_connections USING btree (requisition_id)
 idx|CREATE UNIQUE INDEX bank_setup_events_pkey ON public.bank_setup_events USING btree (id)
+idx|CREATE UNIQUE INDEX bank_subscriptions_merchant_normalized_key ON public.bank_subscriptions USING btree (merchant_normalized)
+idx|CREATE UNIQUE INDEX bank_subscriptions_pkey ON public.bank_subscriptions USING btree (id)
 idx|CREATE UNIQUE INDEX bank_transactions_bank_account_id_provider_transaction_id_key ON public.bank_transactions USING btree (bank_account_id, provider_transaction_id)
 idx|CREATE UNIQUE INDEX bank_transactions_pkey ON public.bank_transactions USING btree (id)
+idx|CREATE UNIQUE INDEX bank_transactions_reconciled_uidx ON public.bank_transactions USING btree (reconciled_capture_id) WHERE (reconciled_capture_id IS NOT NULL)
 idx|CREATE UNIQUE INDEX gym_body_log_pkey ON public.gym_body_log USING btree (id)
 idx|CREATE UNIQUE INDEX gym_days_pkey ON public.gym_days USING btree (id)
 idx|CREATE UNIQUE INDEX gym_exercises_pkey ON public.gym_exercises USING btree (id)
@@ -302,6 +345,7 @@ idx|CREATE UNIQUE INDEX mind_device_sessions_pkey ON public.mind_device_sessions
 idx|CREATE UNIQUE INDEX mind_device_sessions_token_hash_key ON public.mind_device_sessions USING btree (token_hash)
 idx|CREATE UNIQUE INDEX mind_devices_pkey ON public.mind_devices USING btree (id)
 idx|CREATE UNIQUE INDEX mind_devices_token_hash_key ON public.mind_devices USING btree (token_hash)
+idx|CREATE UNIQUE INDEX money_categories_pkey ON public.money_categories USING btree (name)
 idx|CREATE UNIQUE INDEX notification_log_pkey ON public.notification_log USING btree (id)
 idx|CREATE UNIQUE INDEX notification_preferences_pkey ON public.notification_preferences USING btree (id)
 idx|CREATE UNIQUE INDEX notification_queue_pkey ON public.notification_queue USING btree (id)
@@ -310,8 +354,10 @@ idx|CREATE UNIQUE INDEX push_subscriptions_endpoint_key ON public.push_subscript
 idx|CREATE UNIQUE INDEX push_subscriptions_pkey ON public.push_subscriptions USING btree (id)
 pol|0
 rls|bank_accounts|t
+rls|bank_category_rules|t
 rls|bank_connections|t
 rls|bank_setup_events|t
+rls|bank_subscriptions|t
 rls|bank_transactions|t
 rls|gym_body_log|t
 rls|gym_days|t
@@ -323,6 +369,7 @@ rls|gym_sets|t
 rls|mind_captures|t
 rls|mind_device_sessions|t
 rls|mind_devices|t
+rls|money_categories|t
 rls|notification_log|t
 rls|notification_preferences|t
 rls|notification_queue|t

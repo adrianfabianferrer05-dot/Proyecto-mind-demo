@@ -59,6 +59,28 @@ for (const f of CLIENTE) {
     problems.push(`${rel(f)}: el cliente no debe llamar a functions/v1/capture (es la puerta del Atajo, con otro token)`);
 }
 
+/* 5. Un parametro que puede llegar nulo necesita decir de que tipo es, pero solo
+      donde Postgres no tenga de donde deducirlo. En un `insert ... values (...)` o
+      en un `set columna = ...` lo deduce de la columna y no hay problema; en un
+      `case when $1 is not null`, en un `coalesce($1, ...)` o en una comparacion
+      suelta, no hay columna de la que tirar y responde "could not determine data
+      type of parameter $N" tirando la consulta entera. Paso de verdad en la
+      reconciliacion de Dinero: la rama "la captura no traia categoria" no se habia
+      ejecutado nunca, asi que el fallo aparecio directamente en produccion. */
+const EDGE = files.filter((f) => f.includes('/supabase/functions/') && extname(f) === '.ts');
+const AMBIGUO = /\$\{[^{}]*\|\|\s*null\s*\}(?!\s*::)/g;
+for (const f of EDGE) {
+  const src = readFileSync(f, 'utf8');
+  for (const m of src.matchAll(AMBIGUO)) {
+    const antes = src.slice(Math.max(0, m.index - 30), m.index).toLowerCase();
+    const despues = src.slice(m.index + m[0].length, m.index + m[0].length + 30).toLowerCase();
+    const sinContexto = /case\s+when\s*$|coalesce\(\s*$/.test(antes) || /^\s*is\s+(not\s+)?null/.test(despues);
+    if (!sinContexto) continue;
+    const linea = src.slice(0, m.index).split('\n').length;
+    problems.push(`${rel(f)}:${linea}: parametro que puede ser null donde Postgres no puede deducir el tipo (${m[0].slice(0, 40)}): anade ::text, ::uuid o lo que toque`);
+  }
+}
+
 if (problems.length) {
   console.error('LINT FALLA:\n' + problems.map((p) => '  - ' + p).join('\n'));
   process.exit(1);

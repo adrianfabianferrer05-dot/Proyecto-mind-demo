@@ -139,6 +139,50 @@ async function run(width) {
     history: [{ id: 'h1', day_id: 'gd3', day_name_snapshot: 'Brazos', started_at: day(-2, 18), finished_at: day(-2, 19), set_count: 18, volume_kg: 5400 }],
   });
 
+  /* Movimientos de mentira con la forma de los de verdad: nombre ya normalizado,
+     categoria puesta y uno ya emparejado con un gasto apuntado a mano. */
+  const CATS = ['Alimentación', 'Comer fuera', 'Ocio', 'Transporte', 'Compras', 'Suscripciones', 'Hogar', 'Salud', 'Gimnasio', 'Viajes', 'Transferencias / Bizum', 'Efectivo', 'Ingresos', 'Otros', 'Sin clasificar'];
+  const moneyActions = [];
+  const movimientos = [
+    { id: 'm1', booked_at: day(-1), amount: -29.42, merchant_normalized: 'Mercadona', description: 'OP.TARJ MERCADONA', category: 'Alimentación', classification_source: 'rule', classification_confidence: 1, reconciled_capture_id: null },
+    { id: 'm2', booked_at: day(-2), amount: -17.7, merchant_normalized: 'Mercadona', description: 'OP.TARJ MERCADONA', category: 'Alimentación', classification_source: 'rule', classification_confidence: 1, reconciled_capture_id: null },
+    { id: 'm3', booked_at: day(-2), amount: -23.1, merchant_normalized: 'Crepería Dimas', description: 'OP.TARJ CREPERIA', category: 'Comer fuera', classification_source: 'rule', classification_confidence: 1, reconciled_capture_id: null },
+    { id: 'm4', booked_at: day(-4), amount: -7.8, merchant_normalized: 'Crepería Dimas', description: 'OP.TARJ CREPERIA', category: 'Comer fuera', classification_source: 'rule', classification_confidence: 1, reconciled_capture_id: null },
+    { id: 'm5', booked_at: day(-5), amount: -8.99, merchant_normalized: 'Netflix', description: 'OP.TARJ NETFLIX', category: 'Suscripciones', classification_source: 'rule', classification_confidence: 1, reconciled_capture_id: null },
+    { id: 'm6', booked_at: day(-6), amount: -20, merchant_normalized: 'E.S. Herrero', description: 'OP.TARJ ES HERRERO', category: 'Transporte', classification_source: 'rule', classification_confidence: 1, reconciled_capture_id: 'cap-1' },
+    { id: 'm7', booked_at: day(-7), amount: -18, merchant_normalized: 'Bizum · Mohamed L.', description: 'BIZUM ENVIADO', category: 'Transferencias / Bizum', classification_source: 'rule', classification_confidence: 1, reconciled_capture_id: null },
+    { id: 'm8', booked_at: day(-8), amount: 200, merchant_normalized: 'Nómina · Marlex', description: 'NOMINA', category: 'Ingresos', classification_source: 'rule', classification_confidence: 1, reconciled_capture_id: null },
+  ];
+  const suscripciones = [{ comercio: 'Netflix', status: 'possible', amount: 8.99, months: 4, last_seen: day(-5).slice(0, 10) }];
+  const mesActual = () => new Date().toISOString().slice(0, 7);
+  function resumenDinero() {
+    const porCat = new Map();
+    for (const t of movimientos) {
+      const c = t.category || 'Sin clasificar';
+      const v = porCat.get(c) || { categoria: c, gastado: 0, ingresado: 0, movimientos: 0, anterior: 0 };
+      if (t.amount < 0) v.gastado = Math.round((v.gastado - t.amount) * 100) / 100;
+      else v.ingresado = Math.round((v.ingresado + t.amount) * 100) / 100;
+      v.movimientos++;
+      porCat.set(c, v);
+    }
+    const total = [...porCat.values()].reduce((s, c) => s + c.gastado, 0);
+    /* Un mes anterior de mentira pero coherente: sirve para que la comparacion
+       tenga algo con lo que comparar. */
+    const previos = { 'Alimentación': 65, 'Comer fuera': 12, 'Suscripciones': 8.99 };
+    const categorias = [...porCat.values()].map((c) => ({
+      ...c,
+      anterior: previos[c.categoria] || 0,
+      diferencia: Math.round((c.gastado - (previos[c.categoria] || 0)) * 100) / 100,
+      porcentaje: total > 0 ? Math.round((c.gastado / total) * 1000) / 10 : 0,
+    })).sort((a, b) => b.gastado - a.gastado);
+    return {
+      ok: true, mes: mesActual(), mes_anterior: '2026-08', total_gastado: Math.round(total * 100) / 100,
+      total_ingresado: 200, balance: Math.round((200 - total) * 100) / 100, movimientos: movimientos.length,
+      gastado_mes_anterior: 85.99, diferencia_total: Math.round((total - 85.99) * 100) / 100,
+      categorias, sin_clasificar: 0, fuentes: { rule: movimientos.length }, suscripciones, reconciliados: 1,
+    };
+  }
+
   await ctx.route('**/functions/v1/**', async (route) => {
     const req = route.request();
     const url = req.url();
@@ -186,6 +230,29 @@ async function run(width) {
         }
       }
       return route.fulfill({ json: gymPayload() });
+    }
+    /* Dinero por categorias. El resumen se recalcula al vuelo desde `movimientos`
+       para que un cambio de categoria se note de verdad en la pantalla y no solo en
+       la peticion: si la fila no cambia, el test no vale nada. */
+    if (/\/money(\?|$)/.test(url)) {
+      const body = req.postDataJSON() || {};
+      moneyActions.push(body);
+      if (body.action === 'categories') return route.fulfill({ json: { ok: true, categories: CATS } });
+      if (body.action === 'transactions')
+        return route.fulfill({ json: { ok: true, category: body.category, month: body.month, transactions: movimientos.filter((t) => t.category === body.category) } });
+      if (body.action === 'set_category') {
+        const t = movimientos.find((x) => x.id === body.id);
+        if (t) t.category = body.category;
+        if (body.learn) for (const o of movimientos) if (o.merchant_normalized === t?.merchant_normalized) o.category = body.category;
+        return route.fulfill({ json: { ok: true, learned: !!body.learn, also_updated: body.learn ? 1 : 0, merchant: t?.merchant_normalized || null } });
+      }
+      if (body.action === 'subscription') {
+        const sub = suscripciones.find((x) => x.comercio === body.merchant);
+        if (sub) sub.status = body.status;
+        return route.fulfill({ json: { ok: true, subscription: sub } });
+      }
+      if (body.action === 'classify') return route.fulfill({ json: { ok: true, reglas: 0, ia: { resueltos: 0 }, sin_clasificar: 0 } });
+      return route.fulfill({ json: resumenDinero() });
     }
     if (url.includes('mind-config')) return route.fulfill({ json: { ok: true, aiConfigured: true } });
     if (url.includes('bank-config')) return route.fulfill({ json: { ok: true, configured: true } });
@@ -262,7 +329,10 @@ async function run(width) {
   await page.waitForTimeout(700);
   step('la fila nueva aparece en su dia', (await page.locator(`#weekDay${idx} .row-title`).allTextContents()).includes('Recoger el coche'));
 
-  await page.locator(`#weekDay${idx} .row[data-id]`).first().click();
+  /* Se busca la fila por su titulo, no la primera del dia: segun el dia de la semana
+     que toque, el dia elegido ya trae algo del fixture y `.first()` abria otra cosa.
+     El test pasaba o fallaba segun el dia en que se ejecutara. */
+  await page.locator(`#weekDay${idx} .row[data-id]`).filter({ hasText: 'Recoger el coche' }).first().click();
   await page.waitForTimeout(450);
   step('tocar una fila la abre para editar', (await page.locator('#editHead').textContent()) === 'Editar');
   step('al editar si se ofrece "archivar"', await page.locator('#editArchive').isVisible());
@@ -295,7 +365,7 @@ async function run(width) {
     await page.waitForTimeout(500);
     step('completar desde Semana marca la fila', (await page.locator('#weekDays .row.done').count()) > 0);
   }
-  await page.locator(`#weekDay${idx + 1} .row[data-id]`).first().click();
+  await page.locator(`#weekDay${idx + 1} .row[data-id]`).filter({ hasText: 'Recoger el coche' }).first().click();
   await page.waitForTimeout(400);
   await page.locator('#editArchive').click();
   await page.waitForTimeout(700);
@@ -376,7 +446,7 @@ async function run(width) {
   await page.fill('#editTitle', 'Esto lo voy a borrar');
   await page.locator('#editSave').click();
   await page.waitForTimeout(700);
-  await page.locator(`#weekDay${idx} .row[data-id]`).first().click();
+  await page.locator(`#weekDay${idx} .row[data-id]`).filter({ hasText: 'Esto lo voy a borrar' }).first().click();
   await page.waitForTimeout(400);
   await page.locator('#editDelete').click();
   await page.waitForTimeout(250);
@@ -447,6 +517,51 @@ async function run(width) {
   const pulso = await page.locator('#todayPulse .pulse-tile').nth(1).textContent();
   step('Hoy y Dinero cuentan el mes igual', pulso.includes('banco') && /\d/.test(pulso), pulso.replace(/\s+/g, ' ').trim());
 
+  /* ── Dinero: en que se va, y poder cambiarlo ───────────────────────────── */
+  await page.locator('.nav button[data-view="dinero"]').click();
+  await page.waitForTimeout(1500);
+  const cats = page.locator('#moneyCats .money-cat');
+  step('Dinero reparte el gasto por categorias', (await cats.count()) >= 4, `${await cats.count()} categorias`);
+  const primera = (await cats.first().innerText()).replace(/\s+/g, ' ');
+  step('la categoria mayor va primero y dice cuanto', /Alimentación/.test(primera) && /€/.test(primera), primera);
+  step('y que porcentaje representa', /%/.test(primera) && /mov\./.test(primera), primera);
+  step('se compara con el mes anterior', (await page.locator('#moneyCats .money-delta').count()) >= 3);
+  step('y lo resume en una linea legible', /llevas/.test(await page.locator('#moneyInsight').innerText()));
+  step('las posibles suscripciones no se llaman confirmadas', /Posible suscripción mensual/.test(await page.locator('#moneySubs').innerText()));
+
+  await cats.first().click();
+  await page.waitForTimeout(700);
+  step('tocar una categoria abre sus movimientos', (await page.locator('#moneySheet.show').count()) === 1);
+  step('y solo salen los de esa categoria', (await page.locator('#moneyTx .money-tx-row').count()) === 2, `${await page.locator('#moneyTx .money-tx-row').count()} filas`);
+
+  await page.locator('#moneyTx .money-tx-row').first().click();
+  await page.waitForTimeout(500);
+  step('tocar un movimiento ofrece cambiarlo de categoria', (await page.locator('#moneyPicker:not([hidden]) .money-chip').count()) >= 10);
+  await page.locator('#moneyPicker .money-chip', { hasText: 'Ocio' }).first().click();
+  await page.waitForTimeout(700);
+  const cambio = moneyActions.filter((a) => a.action === 'set_category');
+  step('el cambio se guarda de verdad', cambio.length === 1 && cambio[0].category === 'Ocio', JSON.stringify(cambio[0] || {}));
+  step('y pregunta si siempre, sin modal encima', (await page.locator('#moneyLearn:not([hidden])').count()) === 1);
+
+  await page.locator('#moneyLearnYes').click();
+  await page.waitForTimeout(900);
+  const aprendido = moneyActions.filter((a) => a.action === 'set_category' && a.learn === true);
+  step('decir que si crea la regla aprendida', aprendido.length === 1, JSON.stringify(aprendido[0] || {}));
+  step('y la hoja deja de preguntar', (await page.locator('#moneyLearn:not([hidden])').count()) === 0);
+
+  await page.locator('#moneySheetClose').click();
+  await page.waitForTimeout(500);
+  await page.locator('#moneyCats .money-cat', { hasText: 'Transporte' }).first().click();
+  await page.waitForTimeout(700);
+  step('un gasto ya apuntado a mano se marca como tal', (await page.locator('#moneyTx .money-tag').count()) === 1);
+  await page.locator('#moneySheetClose').click();
+  await page.waitForTimeout(400);
+
+  const subBtn = page.locator('#moneySubs .money-sub-btn').first();
+  await subBtn.click();
+  await page.waitForTimeout(500);
+  step('una suscripcion se puede confirmar', moneyActions.some((a) => a.action === 'subscription' && a.status === 'confirmed'));
+
   /* ── Gym: la rutina y el cuerpo se pintan ──────────────────────────────── */
   await page.locator('.nav button[data-view="gym"]').click();
   await page.waitForTimeout(1400);
@@ -515,7 +630,7 @@ async function run(width) {
   await page.waitForTimeout(500);
   const pequenos = await page.evaluate(() => {
     const bad = [];
-    for (const el of document.querySelectorAll('#semana button, #semana [role="button"], #editSheet button, #prefsSheet button, #prefsSheet select, .nav button')) {
+    for (const el of document.querySelectorAll('#semana button, #semana [role="button"], #dinero button, #moneySheet button, #editSheet button, #prefsSheet button, #prefsSheet select, .nav button')) {
       const r = el.getBoundingClientRect();
       if (!r.width || !r.height) continue;
       if (r.height < 44 || r.width < 44) bad.push(`${el.id || el.className || el.tagName} ${Math.round(r.width)}x${Math.round(r.height)}`);

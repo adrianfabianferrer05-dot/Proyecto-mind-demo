@@ -1,0 +1,77 @@
+/* Dinero por categorías. Todo se apoya en las variables de app.css: si algún día
+   cambia el verde de la app, cambia aquí también sin tocar este fichero. */
+
+.money-cats-section .section-head{align-items:center}
+.money-month{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);text-transform:capitalize}
+.money-month-btn{width:44px;height:44px;border:0;border-radius:13px;background:transparent;color:var(--muted);font-size:21px;line-height:1;display:grid;place-items:center;transition:color 140ms ease,background-color 140ms ease}
+.money-month-btn:active{background:var(--surface-2);color:var(--ink)}
+.money-month-btn:disabled{opacity:.25}
+
+.money-insight{margin:0 0 14px}
+.money-insight p{margin:0 0 5px;font-size:12px;line-height:1.5;color:var(--muted)}
+.money-insight p:last-child{margin-bottom:0}
+
+.money-cats{display:flex;flex-direction:column;gap:9px}
+.money-cat{display:block;width:100%;text-align:left;border:1px solid var(--line);border-radius:17px;background:var(--surface);padding:13px 15px 11px;transition:transform 140ms var(--ease-out),border-color 140ms ease}
+.money-cat:active{transform:scale(.988);border-color:var(--line-strong)}
+.money-cat-top{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.money-cat-name{font-size:14px;font-weight:700;letter-spacing:-.01em}
+.money-cat-top b{font-size:15px;font-weight:760;font-variant-numeric:tabular-nums}
+/* La barra es comparativa, no absoluta: la categoría mayor ocupa el ancho entero y
+   el resto se mide contra ella. Es la lectura que sirve de un vistazo. */
+.money-cat-bar{height:4px;border-radius:99px;background:var(--surface-3);margin:9px 0 7px;overflow:hidden}
+.money-cat-bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,rgba(202,255,88,.55),var(--signal))}
+.money-cat-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:11px;color:var(--dim)}
+.money-delta{font-style:normal;font-weight:700;font-variant-numeric:tabular-nums}
+.money-delta.sube{color:var(--warn)}
+.money-delta.baja{color:var(--good)}
+.money-delta.igual{color:var(--dim)}
+
+.money-subs{margin-top:18px}
+.money-subs-head{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--dim);margin-bottom:9px}
+.money-sub{display:flex;align-items:center;gap:9px;min-height:56px;border-top:1px solid var(--line)}
+.money-sub:first-of-type{border-top:0}
+.money-sub-copy{min-width:0;flex:1}
+.money-sub-copy b{display:block;font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.money-sub-copy span{display:block;margin-top:2px;font-size:10px;color:var(--dim)}
+.money-sub-btn{min-width:44px;height:44px;padding:0 13px;border:1px solid var(--line);border-radius:13px;background:transparent;color:var(--muted);font:inherit;font-size:12px;font-weight:700;transition:transform 140ms var(--ease-out),color 140ms ease}
+.money-sub-btn:active{transform:scale(.96);color:var(--ink)}
+
+/* ── Hoja de movimientos ─────────────────────────────────────────────────── */
+/* Igual que en las otras hojas: `display:flex` le gana a `[hidden]`, así que sin
+   esto el selector de categoría se queda visible para siempre. */
+#moneySheet [hidden]{display:none}
+.money-sheet-sub{font-size:11px;color:var(--dim);margin:-7px 0 13px;text-transform:capitalize}
+.money-tx{max-height:46vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.money-tx-row{display:flex;align-items:center;gap:12px;width:100%;min-height:60px;text-align:left;border:0;border-top:1px solid var(--line);background:none;padding:8px 0;transition:opacity 140ms ease}
+.money-tx-row:first-child{border-top:0}
+.money-tx-row:active{opacity:.6}
+.money-tx-copy{min-width:0;flex:1}
+.money-tx-copy b{display:block;font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.money-tx-copy span{display:block;margin-top:3px;font-size:10px;color:var(--dim)}
+.money-tag{font-style:normal;margin-left:7px;padding:1px 6px;border-radius:7px;background:var(--surface-3);color:var(--muted);font-size:9px;letter-spacing:.04em}
+.money-tx-amount{font-size:14px;font-weight:740;font-variant-numeric:tabular-nums;flex:0 0 auto}
+.money-tx-amount.negative{color:var(--ink)}
+.money-tx-amount.positive{color:var(--good)}
+
+.money-picker{margin-top:13px;padding-top:13px;border-top:1px solid var(--line)}
+.money-picker-head{font-size:11px;color:var(--muted);margin-bottom:9px}
+.money-picker-grid{display:flex;flex-wrap:wrap;gap:7px}
+.money-chip{min-height:44px;padding:0 13px;border:1px solid var(--line);border-radius:14px;background:var(--surface-2);color:var(--muted);font:inherit;font-size:12px;font-weight:700;transition:transform 140ms var(--ease-out),color 140ms ease,border-color 140ms ease}
+.money-chip:active{transform:scale(.96);color:var(--signal);border-color:rgba(202,255,88,.3)}
+
+/* La pregunta que convierte una corrección en memoria. Una línea, dos botones, y
+   se va sola en cuanto contestas: si esto fuera un modal, nadie lo contestaría. */
+.money-learn{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:13px;padding:11px 13px;border-radius:15px;background:rgba(202,255,88,.07);border:1px solid rgba(202,255,88,.19)}
+.money-learn span{flex:1;min-width:150px;font-size:12px;line-height:1.4}
+.money-learn-btn{min-height:44px;padding:0 15px;border:0;border-radius:13px;background:var(--surface-2);color:var(--ink);font:inherit;font-size:12px;font-weight:720;transition:transform 140ms var(--ease-out)}
+.money-learn-btn:active{transform:scale(.96)}
+#moneyLearnYes{background:var(--signal);color:var(--signal-ink)}
+
+/* El aviso de que el permiso del banco ha caducado no puede parecer una nota más. */
+.money-note.needs-reauth{border-color:rgba(233,191,120,.33);color:var(--warn)}
+
+@media (max-width:360px){
+  .money-cat{padding:12px 13px 10px}
+  .money-chip{font-size:11px;padding:0 11px}
+}
