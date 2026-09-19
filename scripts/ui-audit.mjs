@@ -103,7 +103,41 @@ async function run(width) {
   let prefs = { id: 1, enabled: true, tasks: true, events: true, reminders: true, lead_minutes: 0, quiet_enabled: true, quiet_from_hour: 23, quiet_to_hour: 8 };
   const edits = [];
   const uploads = [];
+  const gymActions = [];
   let voiceMode = 'ok';
+
+  /* Rutina de ejemplo: tres dias y una semana a medio configurar, que es donde se
+     ven los cuatro estados a la vez. `ayer` queda asignado y sin hacer (pendiente),
+     `anteayer` tiene sesion (realizado) y hoy toca (programado). */
+  const hoyWd = new Date().getDay();
+  const ayerWd = (hoyWd + 6) % 7;
+  const anteayerWd = (hoyWd + 5) % 7;
+  const gymDays = [
+    { id: 'gd1', routine_id: 'r1', name: 'Pecho + Espalda', position: 0, notes: null },
+    { id: 'gd2', routine_id: 'r1', name: 'Pierna', position: 1, notes: null },
+    { id: 'gd3', routine_id: 'r1', name: 'Brazos', position: 2, notes: null },
+  ];
+  const schedule = [0, 1, 2, 3, 4, 5, 6].map((weekday) => ({
+    weekday,
+    day_id: weekday === hoyWd ? 'gd1' : weekday === ayerWd ? 'gd2' : weekday === anteayerWd ? 'gd3' : null,
+  }));
+  const gymPayload = () => ({
+    ok: true,
+    routine: { id: 'r1', name: 'Mi rutina' },
+    days: gymDays,
+    exercises: [
+      { id: 'ge1', day_id: 'gd1', name: 'Press banca', position: 0, target_sets: 3, rep_min: 8, rep_max: 12, rest_seconds: 120, increment_kg: 2.5 },
+      { id: 'ge2', day_id: 'gd1', name: 'Dominadas', position: 1, target_sets: 3, rep_min: 6, rep_max: 10, rest_seconds: 120, increment_kg: 2.5 },
+    ],
+    activeSession: null,
+    activeSets: [],
+    recentSets: [],
+    bests: [],
+    body: [],
+    schedule,
+    stats: { sessions_month: 3, sessions_30d: 5 },
+    history: [{ id: 'h1', day_id: 'gd3', day_name_snapshot: 'Brazos', started_at: day(-2, 18), finished_at: day(-2, 19), set_count: 18, volume_kg: 5400 }],
+  });
 
   await ctx.route('**/functions/v1/**', async (route) => {
     const req = route.request();
@@ -142,8 +176,17 @@ async function run(width) {
       return route.fulfill({ json: { ok: true } });
     }
     if (url.includes('gym-progress')) return route.fulfill({ json: { ok: true, rows: [] } });
-    if (/\/gym(\?|$)/.test(url))
-      return route.fulfill({ json: { ok: true, routine: { id: 'r1', name: 'Mi rutina' }, days: [], exercises: [], activeSession: null, activeSets: [], recentSets: [], bests: [], body: [], stats: {}, history: [{ id: 'h1', day_id: 'd1', day_name_snapshot: 'Torso', started_at: day(-1, 18), finished_at: day(-1, 19), set_count: 18, volume_kg: 5400 }] } });
+    if (/\/gym(\?|$)/.test(url)) {
+      if (req.method() === 'POST') {
+        const body = req.postDataJSON() || {};
+        gymActions.push(body);
+        if (body.action === 'set_schedule') {
+          const fila = schedule.find((s) => s.weekday === body.weekday);
+          if (fila) fila.day_id = body.dayId || null;
+        }
+      }
+      return route.fulfill({ json: gymPayload() });
+    }
     if (url.includes('mind-config')) return route.fulfill({ json: { ok: true, aiConfigured: true } });
     if (url.includes('bank-config')) return route.fulfill({ json: { ok: true, configured: true } });
     if (url.includes('/bank'))
@@ -415,6 +458,57 @@ async function run(width) {
     await page.waitForTimeout(1200);
     step('el panel del cuerpo se dibuja', (await page.locator('#gym svg').count()) > 0);
   }
+
+  /* ── Rutina semanal: configurarla en Gym y verla en Semana ─────────────── */
+  await page.locator('.nav button[data-view="gym"]').click();
+  await page.waitForTimeout(1200);
+  const tabRutina = page.locator('[data-gym-tab="routine"]');
+  if (await tabRutina.count()) {
+    await tabRutina.click();
+    await page.waitForTimeout(700);
+  }
+  step('Gym trae el selector de rutina semanal', (await page.locator('.gym-week-pick').count()) === 7);
+  step('y dice cuantos dias entrenas', (await page.locator('#gymWeekNote').textContent()).includes('a la semana'));
+
+  /* Se toca un dia que la rutina de ejemplo deja libre, para no pisar los tres que
+     sostienen las comprobaciones de programado / pendiente / realizado. */
+  const libreWd = (hoyWd + 3) % 7;
+  await page.selectOption(`.gym-week-pick[data-weekday="${libreWd}"]`, 'gd2');
+  await page.waitForTimeout(900);
+  const enviado = gymActions.filter((a) => a.action === 'set_schedule').at(-1);
+  step('elegir entrenamiento manda set_schedule', !!enviado && enviado.weekday === libreWd && enviado.dayId === 'gd2', JSON.stringify(enviado));
+  step('y el selector se queda con lo elegido', (await page.inputValue(`.gym-week-pick[data-weekday="${libreWd}"]`)) === 'gd2');
+  await page.selectOption(`.gym-week-pick[data-weekday="${libreWd}"]`, '');
+  await page.waitForTimeout(900);
+  step('volver a descanso tambien se guarda', gymActions.filter((a) => a.action === 'set_schedule').at(-1).dayId === null);
+
+  await page.locator('.nav button[data-view="semana"]').click();
+  await page.waitForTimeout(900);
+  const hoyIdx = (new Date().getDay() + 6) % 7;
+  const ayerIdx = (hoyIdx + 6) % 7;
+  const anteayerIdx = (hoyIdx + 5) % 7;
+  const textoDe = async (i) => (await page.locator(`#weekDay${i} .rows`).textContent()).replace(/\s+/g, ' ').trim();
+
+  step('el entreno de hoy sale como programado', (await page.locator(`#weekDay${hoyIdx} .week-plan-row.is-programado`).count()) === 1, await textoDe(hoyIdx));
+  step('y dice que te toca entrenar', (await textoDe(hoyIdx)).includes('Entrenar'));
+  if (ayerIdx < hoyIdx) {
+    step('lo que tocaba ayer y no hiciste queda pendiente', (await page.locator(`#weekDay${ayerIdx} .week-plan-row.is-pendiente`).count()) === 1, await textoDe(ayerIdx));
+  }
+  if (anteayerIdx < hoyIdx) {
+    step('lo que si entrenaste sale como realizado', (await page.locator(`#weekDay${anteayerIdx} .week-gym-row.is-realizado`).count()) === 1, await textoDe(anteayerIdx));
+    step('y se nota que era el que tocaba', (await textoDe(anteayerIdx)).includes('era el de hoy'));
+  }
+  const descansos = await page.locator('.week-rest').count();
+  step('los dias sin entreno salen como descanso', descansos >= 1, `${descansos} dias`);
+
+  /* Tocar el entreno programado tiene que abrir Gym en ese dia, no en Gym a secas. */
+  await page.locator(`#weekDay${hoyIdx} .week-plan-row.is-programado`).click();
+  await page.waitForTimeout(1600);
+  step('tocarlo abre Gym', (await page.locator('#gym.active').count()) === 1);
+  step('y se posa en el dia que tocaba', (await page.locator('.gym-day[data-day-id="gd1"].is-target').count()) === 1);
+
+  await page.locator('.nav button[data-view="semana"]').click();
+  await page.waitForTimeout(600);
 
   /* ── iPhone: zonas tactiles y ancho ────────────────────────────────────── */
   await page.locator('.nav button[data-view="semana"]').click();

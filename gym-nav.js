@@ -55,7 +55,12 @@
     });
   }
 
-  const baseRenderGym=window.renderGym;
+  /* OJO: esto SUSTITUYE a renderGym, no lo envuelve. Es a proposito —durante una
+     sesion se puede seguir navegando la rutina, y el reparto de pestañas original no
+     lo permite—, pero tiene una consecuencia: cualquier modulo que se cuelgue de
+     `renderGym` esperando que se llame al anterior se queda sin ejecutar y en
+     silencio. Si necesitas anadir algo al panel de rutina, envuelve `renderRoutine`,
+     que si se llama desde aqui. */
   window.renderGym=function(){
     const d=gymState.data;if(!d)return;
     const sessionId=d.activeSession?.id||null;

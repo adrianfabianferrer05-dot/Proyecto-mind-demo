@@ -9,7 +9,7 @@
     document.head.appendChild(s);
   });
   load('./gym-weights-core.js?v=1')
-    .then(()=>load('./gym-nav.js?v=1'))
+    .then(()=>load('./gym-nav.js?v=2'))
     .then(()=>load('./gym-anatomy.js?v=2'))
     .then(()=>load('./gym-body.js?v=2'))
     .catch(err=>console.error('[Segunda Mente Gym]',err));

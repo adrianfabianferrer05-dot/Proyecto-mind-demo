@@ -35,25 +35,69 @@
     return Array.from({ length: 7 }, (_, i) => new Date(start.getTime() + i * DAY));
   }
 
-  /* Que cae en cada dia: planes y tareas con fecha, mas entrenos terminados. */
-  function contentFor(day) {
+  /* En que estado esta el entrenamiento de un dia. Pura a proposito: es la regla que
+     decide lo que lees en Semana, y una regla que no se puede probar acaba mintiendo.
+
+     - realizado : hay una sesion terminada ese dia (la hicieras o no segun el plan)
+     - programado: toca y aun puede hacerse (hoy o mas adelante)
+     - pendiente : tocaba, ya paso el dia y no se hizo
+     - descanso  : no toca nada, y es una decision, no un hueco
+     - sin-rutina: la semana no esta configurada todavia; no se inventa un descanso */
+  function planState({ assignedId, done, day, today, configured }) {
+    if (done) return 'realizado';
+    if (!configured) return 'sin-rutina';
+    if (!assignedId) return 'descanso';
+    const d = new Date(day.getFullYear(), day.getMonth(), day.getDate()).getTime();
+    const t = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+    return d < t ? 'pendiente' : 'programado';
+  }
+
+  /* Que cae en cada dia: planes y tareas con fecha, entrenos terminados y lo que
+     tocaba entrenar. La rutina semanal se lee del modulo de Gym, no se copia. */
+  function contentFor(day, today = new Date()) {
     const captures = (state.captures || [])
       .filter((c) => !c.archived_at && c.due_at)
       .filter((c) => sameDay(new Date(c.due_at), day))
       .sort((a, b) => new Date(a.due_at) - new Date(b.due_at));
-    const sessions = (typeof gymState !== 'undefined' ? gymState.data?.history || [] : [])
-      .filter((h) => h.started_at && sameDay(new Date(h.started_at), day));
-    return { captures, sessions };
+    const data = typeof gymState !== 'undefined' ? gymState.data : null;
+    const sessions = (data?.history || []).filter((h) => h.started_at && sameDay(new Date(h.started_at), day));
+    const assignedId = typeof gymScheduleMap === 'function' ? gymScheduleMap(data).get(day.getDay()) || null : null;
+    const configured = typeof gymScheduleIsSet === 'function' ? gymScheduleIsSet(data) : false;
+    const planDay = assignedId ? (data?.days || []).find((x) => x.id === assignedId) || null : null;
+    const state_ = planState({ assignedId, done: sessions.length > 0, day, today, configured });
+    return { captures, sessions, assignedId, planDay, plan: state_, exercises: planDay ? (data?.exercises || []).filter((e) => e.day_id === planDay.id).length : 0 };
   }
 
-  function sessionRow(h) {
+  const DUMBBELL = '<svg viewBox="0 0 24 24"><path d="M3 9v6M6 7v10M18 7v10M21 9v6M6 12h12"/></svg>';
+
+  function sessionRow(h, segunPlan) {
     const vol = Number(h.volume_kg) || 0;
     const time = new Intl.DateTimeFormat('es-ES', { hour: '2-digit', minute: '2-digit' }).format(new Date(h.started_at));
-    return `<div class="row week-gym-row" data-week-gym="1" role="button" tabindex="0" aria-label="Ver este entreno en Gym">
-      <div class="row-icon gym"><svg viewBox="0 0 24 24"><path d="M3 9v6M6 7v10M18 7v10M21 9v6M6 12h12"/></svg></div>
+    /* Si el entreno era el que tocaba, se dice: es la diferencia entre "entrenaste" y
+       "cumpliste tu rutina", y sin decirlo la semana no se lee de un vistazo. */
+    const sub = `${esc(time)} · ${Number(h.set_count) || 0} series${segunPlan ? ' · era el de hoy' : ''}`;
+    return `<div class="row week-gym-row is-realizado" data-week-gym="${esc(h.day_id || '')}" role="button" tabindex="0" aria-label="Ver este entreno en Gym">
+      <div class="row-icon gym">${DUMBBELL}</div>
       <div class="row-copy"><div class="row-title">${esc(h.day_name_snapshot || 'Entreno')}</div>
-      <div class="row-sub">${esc(time)} · ${Number(h.set_count) || 0} series</div></div>
-      <div class="row-side">${vol ? esc(new Intl.NumberFormat('es-ES', { maximumFractionDigits: 0 }).format(vol)) + ' kg' : 'Gym'}</div>
+      <div class="row-sub">${sub}</div></div>
+      <div class="row-side">${vol ? esc(new Intl.NumberFormat('es-ES', { maximumFractionDigits: 0 }).format(vol)) + ' kg' : 'Hecho'}</div>
+    </div>`;
+  }
+
+  /* Lo que toca y todavia no se ha hecho, o el descanso. Tocarlo abre Gym en ese
+     mismo dia de la rutina, no en la pantalla de Gym a secas. */
+  function planRow({ plan, planDay, exercises }) {
+    /* El descanso no necesita una fila entera con icono: en una semana de cuatro
+       entrenos serian tres bloques ocupando media pantalla para no decir nada. Una
+       linea basta, y asi lo que si tienes que hacer destaca. */
+    if (plan === 'descanso') return '<div class="week-rest">Descanso</div>';
+    if (!planDay || (plan !== 'programado' && plan !== 'pendiente')) return '';
+    const pendiente = plan === 'pendiente';
+    return `<div class="row week-plan-row is-${plan}" data-week-plan="${esc(planDay.id)}" role="button" tabindex="0" aria-label="Abrir ${esc(planDay.name)} en Gym">
+      <div class="row-icon gym">${DUMBBELL}</div>
+      <div class="row-copy"><div class="row-title">${esc(planDay.name)}</div>
+      <div class="row-sub">${pendiente ? 'No lo hiciste' : `Te toca${exercises ? ` · ${exercises} ejercicio${exercises === 1 ? '' : 's'}` : ''}`}</div></div>
+      <div class="row-side">${pendiente ? 'Pendiente' : 'Entrenar'}</div>
     </div>`;
   }
 
@@ -63,8 +107,8 @@
     const list = days();
     const today = new Date();
     const counts = list.map((d) => {
-      const { captures, sessions } = contentFor(d);
-      return captures.length + sessions.length;
+      const { captures, sessions, plan } = contentFor(d, today);
+      return captures.length + sessions.length + (plan === 'programado' || plan === 'pendiente' ? 1 : 0);
     });
     const total = counts.reduce((a, b) => a + b, 0);
     const first = list[0];
@@ -91,19 +135,21 @@
 
     w$('weekDays').innerHTML = list
       .map((d, i) => {
-        const { captures, sessions } = contentFor(d);
+        const info = contentFor(d, today);
+        const { captures, sessions } = info;
         const isToday = sameDay(d, today);
         const past = d < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const gym = sessions.map((h) => sessionRow(h, h.day_id && h.day_id === info.assignedId)).join('') + planRow(info);
         const body =
-          captures.length || sessions.length
-            ? sessions.map(sessionRow).join('') + captures.map((c) => row(c, { archive: false })).join('')
+          gym || captures.length
+            ? gym + captures.map((c) => row(c, { archive: false })).join('')
             : `<button class="week-empty press" data-week-add="${i}">${past ? 'Sin nada registrado' : 'Libre'}<i>+</i></button>`;
         return `<section class="week-day${isToday ? ' is-today' : ''}${past ? ' is-past' : ''}" id="weekDay${i}">
           <header class="week-day-head">
             <h3>${longDay.format(d)}<span>${d.getDate()}</span></h3>
             <div class="week-day-tools">
               ${isToday ? '<em>Hoy</em>' : ''}
-              ${isToday ? `<button class="week-day-btn press" data-week-train="1" aria-label="Entrenar hoy"><svg viewBox="0 0 24 24"><path d="M3 9v6M6 7v10M18 7v10M21 9v6M6 12h12"/></svg></button>` : ''}
+              ${isToday ? `<button class="week-day-btn press" data-week-train="${esc(info.assignedId || '')}" aria-label="Entrenar hoy">${DUMBBELL}</button>` : ''}
               <button class="week-day-btn press" data-week-add="${i}" aria-label="Añadir algo el ${d.getDate()}"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
             </div>
           </header>
@@ -170,9 +216,17 @@
         if (typeof openCaptureCreator === 'function') openCaptureCreator(day);
         return;
       }
-      if (e.target.closest('[data-week-train]') || e.target.closest('[data-week-gym]')) {
-        if (document.getElementById('gym')) go('gym');
-        else toast('El módulo de gym aún no ha cargado');
+      /* Tocar lo que toca entrenar, lo que ya entrenaste o el boton de hoy abre Gym
+         en ese dia concreto de la rutina, no en Gym a secas: el objetivo es empezar
+         a entrenar, no tener que buscarlo otra vez. */
+      const plan = e.target.closest('[data-week-plan]');
+      const train = e.target.closest('[data-week-train]');
+      const hecho = e.target.closest('[data-week-gym]');
+      if (plan || train || hecho) {
+        if (!document.getElementById('gym')) return void toast('El módulo de gym aún no ha cargado');
+        const dayId = plan?.dataset.weekPlan || train?.dataset.weekTrain || hecho?.dataset.weekGym;
+        if (dayId && typeof openGymDay === 'function') openGymDay(dayId);
+        else go('gym');
         return;
       }
       /* La casilla de completar ya la lleva `bindRows()`; abrir el editor encima
@@ -185,11 +239,10 @@
     /* Mismo gesto con teclado para las filas que no son botones de verdad. */
     view.addEventListener('keydown', (e) => {
       if (e.key !== 'Enter' && e.key !== ' ') return;
-      const gym = e.target.closest?.('[data-week-gym]');
-      if (gym) {
-        e.preventDefault();
-        if (document.getElementById('gym')) go('gym');
-      }
+      const fila = e.target.closest?.('[data-week-gym], [data-week-plan]');
+      if (!fila) return;
+      e.preventDefault();
+      fila.click();
     });
 
     /* Cuando app.js vuelve a pintar tras guardar o sincronizar, la semana se entera. */

@@ -58,6 +58,22 @@
   border:0;border-radius:12px;background:transparent;transition:background-color 160ms ease,color 160ms ease}
 .week-empty i{font-style:normal;font-size:15px;line-height:1;color:var(--dim);opacity:.7}
 .week-empty:active{background:var(--surface-2);color:var(--muted)}
+/* Lo que toca, lo que hiciste, lo que dejaste pasar y el descanso. Cuatro estados
+   que se distinguen de un vistazo sin leer: verde lo que esta por hacer, ambar lo
+   que se paso, apagado el descanso. */
+.week-plan-row{cursor:pointer}
+.week-plan-row .row-side{font-size:11px;font-weight:720}
+.week-plan-row.is-programado{background:linear-gradient(100deg,rgba(202,255,88,.06),transparent 62%)}
+.week-plan-row.is-programado .row-side{color:var(--signal)}
+.week-plan-row.is-programado:active{background:var(--surface-2)}
+.week-plan-row.is-pendiente .row-icon.gym svg{stroke:#e8c05a}
+.week-plan-row.is-pendiente .row-side{color:#e8c05a}
+.week-plan-row.is-pendiente:active{background:var(--surface-2)}
+.week-rest{display:flex;align-items:center;gap:8px;min-height:30px;padding:0 2px;
+  color:var(--dim);font-size:11px;letter-spacing:.01em}
+.week-rest:before{content:"";width:14px;height:1px;background:currentColor;opacity:.55;flex:0 0 auto}
+.week-gym-row.is-realizado .row-side{color:var(--good, #8fdba0)}
+
 .row-icon.gym svg{stroke:var(--signal)}
 .week-gym-row{cursor:pointer}
 .week-gym-row .row-side{color:var(--muted);font-size:11px}

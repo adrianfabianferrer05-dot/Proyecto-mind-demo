@@ -1,10 +1,8 @@
-/* Gym: rutina, dias, ejercicios, sesiones, series y peso corporal. Todo el modulo de
-   entrenamiento pasa por aqui.
+/* Gym: rutina, dias, ejercicios, sesiones, series, peso corporal y que toca cada dia
+   de la semana. Todo el modulo de entrenamiento pasa por aqui.
 
-   Recuperado del despliegue: estaba en produccion sin una linea de codigo en el
-   repositorio. Se copia tal cual esta en el servidor, sin cambiar nada, para que
-   exista, se pueda leer y se pueda comprobar con `npm run typecheck`. La copia no se
-   ha vuelto a desplegar: lo que corre en produccion sigue siendo la version 2. */
+   La rutina semanal vive aqui y no en Semana a proposito: Semana la lee de este mismo
+   payload. Una sola fuente, o acabarian discrepando sobre que tocaba el martes. */
 import "@supabase/functions-js/edge-runtime.d.ts";
 import postgres from "npm:postgres@3.4.7";
 
@@ -61,12 +59,14 @@ async function payload(){
     select exercise_id,max(weight_kg*(1+(reps::numeric/30)))::numeric(10,2) as best_e1rm,max(weight_kg)::numeric(10,2) as max_weight
     from public.gym_sets where exercise_id is not null and not is_warmup and reps>0 group by exercise_id`;
   const body=await sql`select id,measured_at,weight_kg,note from public.gym_body_log order by measured_at desc limit 30`;
+  /* Siempre siete filas: el descanso es day_id nulo, no una fila que falta. */
+  const schedule=await sql`select weekday,day_id from public.gym_schedule order by weekday`;
   const statsRows=await sql`
     select
       count(*) filter(where finished_at is not null and started_at>=date_trunc('month',now()))::int as sessions_month,
       count(*) filter(where finished_at is not null and started_at>=now()-interval '30 days')::int as sessions_30d
     from public.gym_sessions`;
-  return {routine,days,exercises,activeSession,activeSets,history,recentSets,bests,body,stats:statsRows[0]||{sessions_month:0,sessions_30d:0}};
+  return {routine,days,exercises,activeSession,activeSets,history,recentSets,bests,body,schedule,stats:statsRows[0]||{sessions_month:0,sessions_30d:0}};
 }
 
 Deno.serve(async(req:Request)=>{
@@ -136,6 +136,19 @@ Deno.serve(async(req:Request)=>{
       const id=text(body.sessionId,60);await sql`delete from public.gym_sessions where id=${id}::uuid and finished_at is null`;
     }else if(action==="log_bodyweight"){
       const weight=num(body.weightKg,null);if(weight===null||weight<20||weight>400)return json({ok:false,error:"invalid_weight"},400,origin);await sql`insert into public.gym_body_log(weight_kg,note) values(${weight},${text(body.note,300)||null})`;
+    }else if(action==="set_schedule"){
+      /* Un dia de la semana apunta a un dia de la rutina, o a nada (descanso). Se
+         comprueba que el dia sea de la rutina activa para que no se pueda colgar de
+         una rutina vieja. */
+      const weekday=Math.round(num(body.weekday,-1)!);
+      if(!(weekday>=0&&weekday<=6))return json({ok:false,error:"invalid_weekday"},400,origin);
+      const dayId=text(body.dayId,60);
+      if(dayId){
+        const day=await sql`select id from public.gym_days where id=${dayId}::uuid and routine_id=${routine.id} limit 1`;
+        if(!day.length)return json({ok:false,error:"day_not_found"},404,origin);
+      }
+      await sql`insert into public.gym_schedule(weekday,day_id,updated_at) values(${weekday},${dayId||null},now())
+                on conflict (weekday) do update set day_id=excluded.day_id,updated_at=now()`;
     }else if(action==="delete_bodyweight"){
       const id=text(body.id,60);await sql`delete from public.gym_body_log where id=${id}::uuid`;
     }else return json({ok:false,error:"unknown_action"},400,origin);

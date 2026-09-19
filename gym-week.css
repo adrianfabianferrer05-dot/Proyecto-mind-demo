@@ -1,0 +1,36 @@
+/* Selector de rutina semanal, dentro de Gym. Siete filas, ni una pantalla aparte:
+   decidir qué toca cada día es parte de tener una rutina, no otra sección. */
+
+.gym-week-note{margin:-2px 0 12px;font-size:11px;line-height:1.45;color:var(--dim)}
+.gym-week-rows{display:flex;flex-direction:column;gap:6px}
+
+.gym-week-row{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  min-height:52px;padding:0 12px;border:1px solid var(--line);border-radius:15px;background:var(--surface);
+  transition:border-color 180ms ease,background-color 180ms ease}
+.gym-week-row.is-training{border-color:rgba(202,255,88,.24);background:linear-gradient(120deg,rgba(202,255,88,.06),var(--surface))}
+
+.gym-week-when{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--muted);min-width:0}
+.gym-week-when b{display:grid;place-items:center;width:26px;height:26px;border-radius:9px;flex:0 0 auto;
+  background:var(--surface-2);color:var(--dim);font-size:11px;font-weight:740}
+.gym-week-row.is-training .gym-week-when{color:var(--ink)}
+.gym-week-row.is-training .gym-week-when b{background:rgba(202,255,88,.16);color:var(--signal)}
+
+/* 44px de alto aunque la fila mida 52: el dedo va al select, no a la fila. */
+.gym-week-pick{flex:0 1 auto;max-width:56%;min-height:44px;padding:0 10px;border-radius:12px;
+  border:1px solid var(--line);background:var(--surface-2);color:var(--ink);
+  font:inherit;font-size:12px;font-weight:700;outline:none;appearance:none;-webkit-appearance:none;
+  text-overflow:ellipsis}
+.gym-week-pick:disabled{opacity:.55}
+
+/* Al llegar desde Semana, el día que buscabas se señala un momento y se apaga. */
+.gym-day.is-target{outline:1.5px solid rgba(202,255,88,.5);outline-offset:3px;border-radius:20px;
+  animation:gymTarget 2.4s ease forwards}
+@keyframes gymTarget{0%{outline-color:rgba(202,255,88,.55)}70%{outline-color:rgba(202,255,88,.45)}100%{outline-color:rgba(202,255,88,0)}}
+
+@media(max-width:360px){
+  .gym-week-when{font-size:11px;gap:7px}
+  .gym-week-pick{max-width:52%;font-size:11px}
+}
+@media(prefers-reduced-motion:reduce){
+  .gym-day.is-target{animation:none}
+}
