@@ -7,15 +7,15 @@
   "scripts": {
     "test": "node --test test/*.test.mjs",
     "lint": "node scripts/lint.mjs",
-    "build": "node scripts/build-check.mjs",
-    "verify": "npm run lint && npm run typecheck && npm run build && npm test && npm run schema && npm run audit:ui",
+    "check": "node scripts/build-check.mjs",
+    "verify": "npm run lint && npm run typecheck && npm run check && npm test && npm run schema && npm run audit:ui",
     "typecheck": "node scripts/typecheck.mjs",
     "audit:ui": "node scripts/ui-audit.mjs",
     "schema": "node scripts/schema-check.mjs",
     "schema:huella": "node scripts/schema-fingerprint.mjs"
   },
   "engines": {
-    "node": ">=20"
+    "node": "22.x"
   },
   "devDependencies": {
     "playwright": "^1.63.0"

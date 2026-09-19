@@ -71,26 +71,36 @@ for (const copy of copies) {
     errors.push(`${copy} se ha separado de ${source}: el atajo y la app interpretarian distinto (copialo otra vez)`);
 }
 
-/* Vercel: sin `vercel.json` este sitio no se despliega. Tiene package.json pero no
-   se compila nada, asi que Vercel deduce que es un proyecto de Node, ejecuta el
-   build y busca una carpeta de salida que no existe. Paso de verdad: doce commits
-   seguidos fallaron y produccion se quedo congelada. */
+/* Vercel despliega esto tal cual, sin compilar. Lo delicado es que package.json
+   puede convencerlo de lo contrario sin que nadie se entere, porque el fallo no se
+   ve en el repositorio: se ve en un despliegue que nadie mira. Dos cosas lo hacen.
+   Una, un script llamado `build`: Vercel deduce que hay algo que compilar, lo
+   ejecuta y despues busca una carpeta de salida que no existe. Otra, las
+   dependencias: la unica es playwright, de desarrollo, que al instalarse se
+   descarga un navegador entero. Paso de verdad: doce commits seguidos fallaron y
+   el iPhone siguio servido por la ultima version buena. */
+const pkg = JSON.parse(read('package.json'));
+if (pkg.scripts?.build)
+  errors.push('package.json define un script "build": Vercel deducira que hay que compilar y el despliegue fallara buscando una carpeta de salida. Aqui esa comprobacion se llama "check"');
+if (!/^\d+\.x$/.test(String(pkg.engines?.node || '')))
+  errors.push(`package.json: engines.node tiene que ser una version concreta tipo "22.x" (Vercel no siempre resuelve rangos) y es ${JSON.stringify(pkg.engines?.node)}`);
+
 if (!existsSync(join(ROOT, 'vercel.json'))) {
-  errors.push('falta vercel.json: sin el, Vercel busca una carpeta de salida que no existe y el despliegue falla');
+  errors.push('falta vercel.json: sin el, Vercel instala las dependencias de desarrollo en cada despliegue');
 } else {
   try {
     const v = JSON.parse(read('vercel.json'));
-    if (v.outputDirectory !== '.') errors.push(`vercel.json: outputDirectory deberia ser "." y es ${JSON.stringify(v.outputDirectory)}`);
-    if (v.buildCommand !== '') errors.push('vercel.json: buildCommand tiene que estar vacio, aqui no se compila nada');
-    /* Y tampoco hay que instalar nada: la unica dependencia del repo es playwright,
-       que es de desarrollo y se descarga un navegador entero al instalarse. `api/` no
-       importa nada, asi que el despliegue no necesita node_modules. */
-    if (v.installCommand !== '') errors.push('vercel.json: installCommand tiene que estar vacio, el despliegue no necesita dependencias');
+    if ('buildCommand' in v) errors.push('vercel.json no deberia definir buildCommand: aqui no se compila nada, y basta con que no exista un script "build"');
+    if ('outputDirectory' in v) errors.push('vercel.json no deberia definir outputDirectory: sin build, lo que se sirve es la raiz');
+    if (!v.installCommand || /\b(npm|yarn|pnpm|bun)\b/.test(v.installCommand))
+      errors.push('vercel.json: installCommand tiene que existir y no instalar nada');
+    /* Y si algun dia api/ necesita una dependencia de verdad, esto tiene que saltar
+       antes de que el despliegue se quede sin ella. */
     const conImports = readdirSync(join(ROOT, 'api'))
       .filter((f) => f.endsWith('.js'))
       .filter((f) => /^\s*(import\s|.*\brequire\()/m.test(read(join('api', f))));
     if (conImports.length)
-      errors.push(`api/${conImports.join(', api/')} importa dependencias, pero vercel.json no instala nada`);
+      errors.push(`api/${conImports.join(', api/')} importa dependencias, pero el despliegue no instala ninguna`);
   } catch (e) {
     errors.push(`vercel.json no es JSON valido: ${e.message}`);
   }

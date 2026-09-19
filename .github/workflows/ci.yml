@@ -14,7 +14,7 @@ jobs:
       - run: npm ci || npm install
       - run: npm run lint
       - run: npm run typecheck
-      - run: npm run build
+      - run: npm run check
       - run: npm test
       # Las migraciones tienen que levantar el esquema que hay en produccion, no uno
       # parecido: se aplican contra un Postgres vacio y se compara la huella.
