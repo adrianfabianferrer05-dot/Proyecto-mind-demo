@@ -21,7 +21,7 @@ test('la app nativa no contiene credenciales privadas', () => {
   assert.doesNotMatch(api, /service_role/i);
   assert.doesNotMatch(api, /SUPABASE_DB_URL/);
   assert.doesNotMatch(api, /OPENAI_API_KEY/i);
-  assert.match(api, /Bearer \\(token\)/);
+  assert.ok(api.includes('Bearer \\(token)'));
 });
 
 test('los tres widgets existen y comparten el mismo App Group', () => {
