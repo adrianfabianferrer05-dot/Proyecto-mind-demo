@@ -16,6 +16,9 @@ jobs:
       - run: npm run typecheck
       - run: npm run build
       - run: npm test
+      # Las migraciones tienen que levantar el esquema que hay en produccion, no uno
+      # parecido: se aplican contra un Postgres vacio y se compara la huella.
+      - run: npm run schema
       # La auditoria de interfaz necesita un navegador de verdad: es la unica forma
       # de comprobar que una hoja abre, que una fila cambia de dia, que el microfono
       # se suelta al terminar y que nada mide menos de 44 px en un iPhone.

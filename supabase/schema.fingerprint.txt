@@ -1,0 +1,336 @@
+col|bank_accounts|available_balance|numeric|NULL|-
+col|bank_accounts|balance_as_of|timestamp with time zone|NULL|-
+col|bank_accounts|balance_source|text|NULL|-
+col|bank_accounts|connection_id|uuid|NOT NULL|-
+col|bank_accounts|created_at|timestamp with time zone|NOT NULL|now()
+col|bank_accounts|currency|text|NULL|-
+col|bank_accounts|current_balance|numeric|NULL|-
+col|bank_accounts|display_name|text|NULL|-
+col|bank_accounts|iban_last4|text|NULL|-
+col|bank_accounts|id|uuid|NOT NULL|gen_random_uuid()
+col|bank_accounts|last_synced_at|timestamp with time zone|NULL|-
+col|bank_accounts|owner_name|text|NULL|-
+col|bank_accounts|provider_account_id|text|NOT NULL|-
+col|bank_accounts|updated_at|timestamp with time zone|NOT NULL|now()
+col|bank_connections|balance_synced_at|timestamp with time zone|NULL|-
+col|bank_connections|consent_expires_at|timestamp with time zone|NULL|-
+col|bank_connections|created_at|timestamp with time zone|NOT NULL|now()
+col|bank_connections|device_session_id|uuid|NOT NULL|-
+col|bank_connections|id|uuid|NOT NULL|gen_random_uuid()
+col|bank_connections|institution_id|text|NOT NULL|-
+col|bank_connections|institution_name|text|NULL|-
+col|bank_connections|last_synced_at|timestamp with time zone|NULL|-
+col|bank_connections|provider_accounts|jsonb|NOT NULL|'[]'::jsonb
+col|bank_connections|provider|text|NOT NULL|'gocardless'::text
+col|bank_connections|requisition_id|text|NULL|-
+col|bank_connections|revoked_at|timestamp with time zone|NULL|-
+col|bank_connections|status|text|NOT NULL|'created'::text
+col|bank_connections|sync_error|text|NULL|-
+col|bank_connections|transactions_synced_at|timestamp with time zone|NULL|-
+col|bank_connections|updated_at|timestamp with time zone|NOT NULL|now()
+col|bank_setup_events|created_at|timestamp with time zone|NOT NULL|now()
+col|bank_setup_events|detail|text|NULL|-
+col|bank_setup_events|device_session_id|uuid|NULL|-
+col|bank_setup_events|http_status|integer|NULL|-
+col|bank_setup_events|id|bigint|NOT NULL|nextval('bank_setup_events_id_seq'::regclass)
+col|bank_setup_events|stage|text|NOT NULL|-
+col|bank_transactions|amount|numeric|NOT NULL|-
+col|bank_transactions|bank_account_id|uuid|NOT NULL|-
+col|bank_transactions|booked_at|timestamp with time zone|NULL|-
+col|bank_transactions|category|text|NULL|-
+col|bank_transactions|created_at|timestamp with time zone|NOT NULL|now()
+col|bank_transactions|currency|text|NOT NULL|'EUR'::text
+col|bank_transactions|description|text|NULL|-
+col|bank_transactions|id|uuid|NOT NULL|gen_random_uuid()
+col|bank_transactions|merchant|text|NULL|-
+col|bank_transactions|provider_transaction_id|text|NOT NULL|-
+col|bank_transactions|raw|jsonb|NOT NULL|'{}'::jsonb
+col|bank_transactions|reconciled_capture_id|uuid|NULL|-
+col|bank_transactions|updated_at|timestamp with time zone|NOT NULL|now()
+col|bank_transactions|value_date|date|NULL|-
+col|gym_body_log|created_at|timestamp with time zone|NOT NULL|now()
+col|gym_body_log|id|uuid|NOT NULL|gen_random_uuid()
+col|gym_body_log|measured_at|timestamp with time zone|NOT NULL|now()
+col|gym_body_log|note|text|NULL|-
+col|gym_body_log|weight_kg|numeric(6,2)|NOT NULL|-
+col|gym_days|created_at|timestamp with time zone|NOT NULL|now()
+col|gym_days|id|uuid|NOT NULL|gen_random_uuid()
+col|gym_days|name|text|NOT NULL|-
+col|gym_days|notes|text|NULL|-
+col|gym_days|position|integer|NOT NULL|0
+col|gym_days|routine_id|uuid|NOT NULL|-
+col|gym_days|updated_at|timestamp with time zone|NOT NULL|now()
+col|gym_exercises|created_at|timestamp with time zone|NOT NULL|now()
+col|gym_exercises|day_id|uuid|NOT NULL|-
+col|gym_exercises|id|uuid|NOT NULL|gen_random_uuid()
+col|gym_exercises|increment_kg|numeric(6,2)|NOT NULL|2.5
+col|gym_exercises|name|text|NOT NULL|-
+col|gym_exercises|notes|text|NULL|-
+col|gym_exercises|planned_weight_kg|numeric(7,2)|NULL|-
+col|gym_exercises|position|integer|NOT NULL|0
+col|gym_exercises|rep_max|smallint|NOT NULL|12
+col|gym_exercises|rep_min|smallint|NOT NULL|6
+col|gym_exercises|rest_seconds|integer|NOT NULL|120
+col|gym_exercises|target_sets|smallint|NOT NULL|3
+col|gym_exercises|updated_at|timestamp with time zone|NOT NULL|now()
+col|gym_exercises|working_weight_kg|numeric(8,2)|NULL|-
+col|gym_routines|created_at|timestamp with time zone|NOT NULL|now()
+col|gym_routines|id|uuid|NOT NULL|gen_random_uuid()
+col|gym_routines|is_active|boolean|NOT NULL|true
+col|gym_routines|name|text|NOT NULL|'Mi rutina'::text
+col|gym_routines|updated_at|timestamp with time zone|NOT NULL|now()
+col|gym_schedule|day_id|uuid|NULL|-
+col|gym_schedule|updated_at|timestamp with time zone|NOT NULL|now()
+col|gym_schedule|weekday|smallint|NOT NULL|-
+col|gym_sessions|bodyweight_kg|numeric(6,2)|NULL|-
+col|gym_sessions|created_at|timestamp with time zone|NOT NULL|now()
+col|gym_sessions|day_id|uuid|NULL|-
+col|gym_sessions|day_name_snapshot|text|NOT NULL|-
+col|gym_sessions|finished_at|timestamp with time zone|NULL|-
+col|gym_sessions|id|uuid|NOT NULL|gen_random_uuid()
+col|gym_sessions|notes|text|NULL|-
+col|gym_sessions|started_at|timestamp with time zone|NOT NULL|now()
+col|gym_sessions|updated_at|timestamp with time zone|NOT NULL|now()
+col|gym_sets|completed_at|timestamp with time zone|NOT NULL|now()
+col|gym_sets|created_at|timestamp with time zone|NOT NULL|now()
+col|gym_sets|exercise_id|uuid|NULL|-
+col|gym_sets|exercise_name_snapshot|text|NOT NULL|-
+col|gym_sets|id|uuid|NOT NULL|gen_random_uuid()
+col|gym_sets|is_warmup|boolean|NOT NULL|false
+col|gym_sets|reps|smallint|NOT NULL|-
+col|gym_sets|rpe|numeric(3,1)|NULL|-
+col|gym_sets|session_id|uuid|NOT NULL|-
+col|gym_sets|set_number|smallint|NOT NULL|-
+col|gym_sets|weight_kg|numeric(7,2)|NOT NULL|0
+col|mind_captures|amount|numeric(12,2)|NULL|-
+col|mind_captures|archived_at|timestamp with time zone|NULL|-
+col|mind_captures|category|text|NULL|-
+col|mind_captures|completed_at|timestamp with time zone|NULL|-
+col|mind_captures|created_at|timestamp with time zone|NOT NULL|now()
+col|mind_captures|currency|text|NOT NULL|'EUR'::text
+col|mind_captures|due_at|timestamp with time zone|NULL|-
+col|mind_captures|id|uuid|NOT NULL|gen_random_uuid()
+col|mind_captures|kind|text|NOT NULL|'note'::text
+col|mind_captures|metadata|jsonb|NOT NULL|'{}'::jsonb
+col|mind_captures|occurred_at|timestamp with time zone|NULL|-
+col|mind_captures|processed|boolean|NOT NULL|false
+col|mind_captures|raw_text|text|NOT NULL|-
+col|mind_captures|source|text|NOT NULL|'iphone_shortcut'::text
+col|mind_captures|title|text|NULL|-
+col|mind_captures|updated_at|timestamp with time zone|NOT NULL|now()
+col|mind_device_sessions|created_at|timestamp with time zone|NOT NULL|now()
+col|mind_device_sessions|id|uuid|NOT NULL|gen_random_uuid()
+col|mind_device_sessions|label|text|NOT NULL|'iPhone'::text
+col|mind_device_sessions|last_seen_at|timestamp with time zone|NOT NULL|now()
+col|mind_device_sessions|revoked_at|timestamp with time zone|NULL|-
+col|mind_device_sessions|token_hash|text|NOT NULL|-
+col|mind_devices|active|boolean|NOT NULL|true
+col|mind_devices|created_at|timestamp with time zone|NOT NULL|now()
+col|mind_devices|id|uuid|NOT NULL|gen_random_uuid()
+col|mind_devices|label|text|NOT NULL|'iPhone'::text
+col|mind_devices|last_seen_at|timestamp with time zone|NULL|-
+col|mind_devices|token_hash|text|NOT NULL|-
+col|mind_devices|updated_at|timestamp with time zone|NOT NULL|now()
+col|notification_log|body|text|NOT NULL|-
+col|notification_log|created_at|timestamp with time zone|NOT NULL|now()
+col|notification_log|failure_count|integer|NOT NULL|0
+col|notification_log|id|bigint|NOT NULL|-
+col|notification_log|kind|text|NOT NULL|'web_push'::text
+col|notification_log|metadata|jsonb|NOT NULL|'{}'::jsonb
+col|notification_log|success_count|integer|NOT NULL|0
+col|notification_log|target_count|integer|NOT NULL|0
+col|notification_log|title|text|NOT NULL|-
+col|notification_preferences|enabled|boolean|NOT NULL|true
+col|notification_preferences|events|boolean|NOT NULL|true
+col|notification_preferences|id|smallint|NOT NULL|1
+col|notification_preferences|lead_minutes|integer|NOT NULL|0
+col|notification_preferences|quiet_enabled|boolean|NOT NULL|true
+col|notification_preferences|quiet_from_hour|smallint|NOT NULL|23
+col|notification_preferences|quiet_to_hour|smallint|NOT NULL|8
+col|notification_preferences|reminders|boolean|NOT NULL|true
+col|notification_preferences|tasks|boolean|NOT NULL|true
+col|notification_preferences|updated_at|timestamp with time zone|NOT NULL|now()
+col|notification_queue|attempts|integer|NOT NULL|0
+col|notification_queue|body|text|NOT NULL|-
+col|notification_queue|capture_id|uuid|NULL|-
+col|notification_queue|created_at|timestamp with time zone|NOT NULL|now()
+col|notification_queue|delivered_at|timestamp with time zone|NULL|-
+col|notification_queue|dispatched_at|timestamp with time zone|NULL|-
+col|notification_queue|id|uuid|NOT NULL|gen_random_uuid()
+col|notification_queue|last_error|text|NULL|-
+col|notification_queue|request_id|bigint|NULL|-
+col|notification_queue|scheduled_at|timestamp with time zone|NOT NULL|-
+col|notification_queue|status|text|NOT NULL|'queued'::text
+col|notification_queue|target_url|text|NOT NULL|'/'::text
+col|notification_queue|title|text|NOT NULL|-
+col|notification_queue|updated_at|timestamp with time zone|NOT NULL|now()
+col|push_activation_codes|code_hash|text|NOT NULL|-
+col|push_activation_codes|created_at|timestamp with time zone|NOT NULL|now()
+col|push_activation_codes|expires_at|timestamp with time zone|NOT NULL|-
+col|push_activation_codes|used_at|timestamp with time zone|NULL|-
+col|push_subscriptions|active|boolean|NOT NULL|true
+col|push_subscriptions|created_at|timestamp with time zone|NOT NULL|now()
+col|push_subscriptions|device_id|uuid|NULL|-
+col|push_subscriptions|endpoint|text|NOT NULL|-
+col|push_subscriptions|failure_count|integer|NOT NULL|0
+col|push_subscriptions|id|uuid|NOT NULL|gen_random_uuid()
+col|push_subscriptions|last_error|text|NULL|-
+col|push_subscriptions|last_success_at|timestamp with time zone|NULL|-
+col|push_subscriptions|subscription|jsonb|NOT NULL|-
+col|push_subscriptions|updated_at|timestamp with time zone|NOT NULL|now()
+col|push_subscriptions|user_agent|text|NULL|-
+con|bank_accounts|bank_accounts_connection_id_fkey|FOREIGN KEY (connection_id) REFERENCES bank_connections(id) ON DELETE CASCADE
+con|bank_accounts|bank_accounts_connection_id_provider_account_id_key|UNIQUE (connection_id, provider_account_id)
+con|bank_accounts|bank_accounts_pkey|PRIMARY KEY (id)
+con|bank_connections|bank_connections_device_session_id_fkey|FOREIGN KEY (device_session_id) REFERENCES mind_device_sessions(id) ON DELETE CASCADE
+con|bank_connections|bank_connections_pkey|PRIMARY KEY (id)
+con|bank_connections|bank_connections_requisition_id_key|UNIQUE (requisition_id)
+con|bank_setup_events|bank_setup_events_device_session_id_fkey|FOREIGN KEY (device_session_id) REFERENCES mind_device_sessions(id) ON DELETE CASCADE
+con|bank_setup_events|bank_setup_events_pkey|PRIMARY KEY (id)
+con|bank_transactions|bank_transactions_bank_account_id_fkey|FOREIGN KEY (bank_account_id) REFERENCES bank_accounts(id) ON DELETE CASCADE
+con|bank_transactions|bank_transactions_bank_account_id_provider_transaction_id_key|UNIQUE (bank_account_id, provider_transaction_id)
+con|bank_transactions|bank_transactions_pkey|PRIMARY KEY (id)
+con|bank_transactions|bank_transactions_reconciled_capture_id_fkey|FOREIGN KEY (reconciled_capture_id) REFERENCES mind_captures(id) ON DELETE SET NULL
+con|gym_body_log|gym_body_log_pkey|PRIMARY KEY (id)
+con|gym_body_log|gym_body_log_weight_kg_check|CHECK (((weight_kg >= (20)::numeric) AND (weight_kg <= (400)::numeric)))
+con|gym_days|gym_days_pkey|PRIMARY KEY (id)
+con|gym_days|gym_days_routine_id_fkey|FOREIGN KEY (routine_id) REFERENCES gym_routines(id) ON DELETE CASCADE
+con|gym_exercises|gym_exercises_check|CHECK (((rep_max >= rep_min) AND (rep_max <= 100)))
+con|gym_exercises|gym_exercises_day_id_fkey|FOREIGN KEY (day_id) REFERENCES gym_days(id) ON DELETE CASCADE
+con|gym_exercises|gym_exercises_increment_kg_check|CHECK (((increment_kg > (0)::numeric) AND (increment_kg <= (100)::numeric)))
+con|gym_exercises|gym_exercises_pkey|PRIMARY KEY (id)
+con|gym_exercises|gym_exercises_planned_weight_kg_check|CHECK (((planned_weight_kg IS NULL) OR (planned_weight_kg >= (0)::numeric)))
+con|gym_exercises|gym_exercises_rep_min_check|CHECK (((rep_min >= 1) AND (rep_min <= 100)))
+con|gym_exercises|gym_exercises_rest_seconds_check|CHECK (((rest_seconds >= 0) AND (rest_seconds <= 1200)))
+con|gym_exercises|gym_exercises_target_sets_check|CHECK (((target_sets >= 1) AND (target_sets <= 12)))
+con|gym_exercises|gym_exercises_working_weight_kg_check|CHECK (((working_weight_kg IS NULL) OR (working_weight_kg >= (0)::numeric)))
+con|gym_routines|gym_routines_pkey|PRIMARY KEY (id)
+con|gym_schedule|gym_schedule_day_id_fkey|FOREIGN KEY (day_id) REFERENCES gym_days(id) ON DELETE SET NULL
+con|gym_schedule|gym_schedule_pkey|PRIMARY KEY (weekday)
+con|gym_schedule|gym_schedule_weekday_check|CHECK (((weekday >= 0) AND (weekday <= 6)))
+con|gym_sessions|gym_sessions_bodyweight_kg_check|CHECK (((bodyweight_kg IS NULL) OR ((bodyweight_kg >= (20)::numeric) AND (bodyweight_kg <= (400)::numeric))))
+con|gym_sessions|gym_sessions_day_id_fkey|FOREIGN KEY (day_id) REFERENCES gym_days(id) ON DELETE SET NULL
+con|gym_sessions|gym_sessions_pkey|PRIMARY KEY (id)
+con|gym_sets|gym_sets_exercise_id_fkey|FOREIGN KEY (exercise_id) REFERENCES gym_exercises(id) ON DELETE SET NULL
+con|gym_sets|gym_sets_pkey|PRIMARY KEY (id)
+con|gym_sets|gym_sets_reps_check|CHECK (((reps >= 0) AND (reps <= 200)))
+con|gym_sets|gym_sets_rpe_check|CHECK (((rpe IS NULL) OR ((rpe >= (1)::numeric) AND (rpe <= (10)::numeric))))
+con|gym_sets|gym_sets_session_id_fkey|FOREIGN KEY (session_id) REFERENCES gym_sessions(id) ON DELETE CASCADE
+con|gym_sets|gym_sets_set_number_check|CHECK (((set_number >= 1) AND (set_number <= 50)))
+con|gym_sets|gym_sets_weight_kg_check|CHECK (((weight_kg >= (0)::numeric) AND (weight_kg <= (1000)::numeric)))
+con|mind_captures|mind_captures_kind_check|CHECK ((kind = ANY (ARRAY['expense'::text, 'income'::text, 'task'::text, 'idea'::text, 'note'::text, 'event'::text, 'debt'::text])))
+con|mind_captures|mind_captures_pkey|PRIMARY KEY (id)
+con|mind_captures|mind_captures_raw_text_check|CHECK ((char_length(btrim(raw_text)) > 0))
+con|mind_device_sessions|mind_device_sessions_pkey|PRIMARY KEY (id)
+con|mind_device_sessions|mind_device_sessions_token_hash_key|UNIQUE (token_hash)
+con|mind_devices|mind_devices_pkey|PRIMARY KEY (id)
+con|mind_devices|mind_devices_token_hash_check|CHECK ((length(token_hash) = 64))
+con|mind_devices|mind_devices_token_hash_key|UNIQUE (token_hash)
+con|notification_log|notification_log_pkey|PRIMARY KEY (id)
+con|notification_preferences|notification_preferences_id_check|CHECK ((id = 1))
+con|notification_preferences|notification_preferences_lead_minutes_check|CHECK (((lead_minutes >= 0) AND (lead_minutes <= 1440)))
+con|notification_preferences|notification_preferences_pkey|PRIMARY KEY (id)
+con|notification_preferences|notification_preferences_quiet_from_hour_check|CHECK (((quiet_from_hour >= 0) AND (quiet_from_hour <= 23)))
+con|notification_preferences|notification_preferences_quiet_to_hour_check|CHECK (((quiet_to_hour >= 0) AND (quiet_to_hour <= 23)))
+con|notification_queue|notification_queue_attempts_check|CHECK ((attempts >= 0))
+con|notification_queue|notification_queue_body_check|CHECK (((char_length(body) >= 1) AND (char_length(body) <= 220)))
+con|notification_queue|notification_queue_capture_id_fkey|FOREIGN KEY (capture_id) REFERENCES mind_captures(id) ON DELETE CASCADE
+con|notification_queue|notification_queue_pkey|PRIMARY KEY (id)
+con|notification_queue|notification_queue_status_check|CHECK ((status = ANY (ARRAY['queued'::text, 'dispatching'::text, 'dispatched'::text, 'delivered'::text, 'failed'::text, 'cancelled'::text])))
+con|notification_queue|notification_queue_target_url_check|CHECK ((target_url ~~ '/%'::text))
+con|notification_queue|notification_queue_title_check|CHECK (((char_length(title) >= 1) AND (char_length(title) <= 80)))
+con|push_activation_codes|push_activation_codes_pkey|PRIMARY KEY (code_hash)
+con|push_subscriptions|push_subscriptions_device_id_fkey|FOREIGN KEY (device_id) REFERENCES mind_devices(id) ON DELETE SET NULL
+con|push_subscriptions|push_subscriptions_endpoint_key|UNIQUE (endpoint)
+con|push_subscriptions|push_subscriptions_failure_count_check|CHECK ((failure_count >= 0))
+con|push_subscriptions|push_subscriptions_pkey|PRIMARY KEY (id)
+fun|private.apply_notification_preferences()|secdef=t|plpgsql|29e56485c002e96d56632618cbe64cfc|search_path=public, pg_temp
+fun|private.dispatch_due_notifications()|secdef=t|plpgsql|91370c4f1361a0e72280a77ef41351cd|search_path=public, pg_catalog
+fun|private.issue_push_activation_code(ttl_minutes integer)|secdef=t|plpgsql|8c041fe6698bc0234a5299db511345da|search_path=""
+fun|private.reconcile_notification_queue()|secdef=t|plpgsql|abd9854d0b2e5dedfabe91ed8c188634|search_path=public, pg_catalog
+fun|public.mind_normalize_spoken_time_title()|secdef=f|plpgsql|2582c33be1c46d84d28211fcb9b27e11|search_path=public
+fun|public.mind_touch_updated_at()|secdef=f|plpgsql|9b1889f56258bf9d6554213c05019c76|search_path=public
+fun|public.touch_gym_exercise_updated_at()|secdef=f|plpgsql|75ee85bfb81cf640baf932f177bf1044|search_path=pg_catalog, public
+ident|notification_log.id|a
+idx|CREATE INDEX bank_accounts_connection_idx ON public.bank_accounts USING btree (connection_id)
+idx|CREATE INDEX bank_connections_device_idx ON public.bank_connections USING btree (device_session_id, created_at DESC)
+idx|CREATE INDEX bank_connections_status_created_idx ON public.bank_connections USING btree (provider, status, created_at DESC)
+idx|CREATE INDEX bank_connections_status_idx ON public.bank_connections USING btree (status) WHERE (revoked_at IS NULL)
+idx|CREATE INDEX bank_setup_events_created_idx ON public.bank_setup_events USING btree (created_at DESC)
+idx|CREATE INDEX bank_transactions_account_date_idx ON public.bank_transactions USING btree (bank_account_id, booked_at DESC)
+idx|CREATE INDEX bank_transactions_reconciled_capture_idx ON public.bank_transactions USING btree (reconciled_capture_id) WHERE (reconciled_capture_id IS NOT NULL)
+idx|CREATE INDEX bank_transactions_unreconciled_idx ON public.bank_transactions USING btree (booked_at DESC) WHERE (reconciled_capture_id IS NULL)
+idx|CREATE INDEX gym_body_log_measured_idx ON public.gym_body_log USING btree (measured_at DESC)
+idx|CREATE INDEX gym_days_routine_position_idx ON public.gym_days USING btree (routine_id, "position")
+idx|CREATE INDEX gym_exercises_day_position_idx ON public.gym_exercises USING btree (day_id, "position")
+idx|CREATE INDEX gym_exercises_planned_weight_idx ON public.gym_exercises USING btree (planned_weight_kg) WHERE (planned_weight_kg IS NOT NULL)
+idx|CREATE INDEX gym_schedule_day_idx ON public.gym_schedule USING btree (day_id)
+idx|CREATE INDEX gym_sessions_day_idx ON public.gym_sessions USING btree (day_id)
+idx|CREATE INDEX gym_sessions_open_idx ON public.gym_sessions USING btree (finished_at) WHERE (finished_at IS NULL)
+idx|CREATE INDEX gym_sessions_started_idx ON public.gym_sessions USING btree (started_at DESC)
+idx|CREATE INDEX gym_sets_exercise_completed_idx ON public.gym_sets USING btree (exercise_id, completed_at DESC) WHERE (exercise_id IS NOT NULL)
+idx|CREATE INDEX gym_sets_exercise_idx ON public.gym_sets USING btree (exercise_id, completed_at DESC)
+idx|CREATE INDEX gym_sets_session_idx ON public.gym_sets USING btree (session_id, completed_at)
+idx|CREATE INDEX mind_captures_active_created_idx ON public.mind_captures USING btree (created_at DESC) WHERE (archived_at IS NULL)
+idx|CREATE INDEX mind_captures_created_at_idx ON public.mind_captures USING btree (created_at DESC)
+idx|CREATE INDEX mind_captures_due_idx ON public.mind_captures USING btree (due_at) WHERE ((archived_at IS NULL) AND (completed_at IS NULL) AND (due_at IS NOT NULL))
+idx|CREATE INDEX mind_captures_kind_active_idx ON public.mind_captures USING btree (kind, created_at DESC) WHERE (archived_at IS NULL)
+idx|CREATE INDEX mind_captures_kind_idx ON public.mind_captures USING btree (kind)
+idx|CREATE INDEX mind_device_sessions_active_idx ON public.mind_device_sessions USING btree (last_seen_at DESC) WHERE (revoked_at IS NULL)
+idx|CREATE INDEX mind_devices_active_idx ON public.mind_devices USING btree (active, updated_at DESC)
+idx|CREATE INDEX notification_queue_capture_idx ON public.notification_queue USING btree (capture_id) WHERE (capture_id IS NOT NULL)
+idx|CREATE INDEX notification_queue_due_idx ON public.notification_queue USING btree (status, scheduled_at) WHERE (status = 'queued'::text)
+idx|CREATE INDEX notification_queue_request_idx ON public.notification_queue USING btree (request_id) WHERE (request_id IS NOT NULL)
+idx|CREATE INDEX push_subscriptions_active_idx ON public.push_subscriptions USING btree (active, updated_at DESC)
+idx|CREATE INDEX push_subscriptions_device_idx ON public.push_subscriptions USING btree (device_id) WHERE (device_id IS NOT NULL)
+idx|CREATE UNIQUE INDEX bank_accounts_connection_id_provider_account_id_key ON public.bank_accounts USING btree (connection_id, provider_account_id)
+idx|CREATE UNIQUE INDEX bank_accounts_pkey ON public.bank_accounts USING btree (id)
+idx|CREATE UNIQUE INDEX bank_connections_pkey ON public.bank_connections USING btree (id)
+idx|CREATE UNIQUE INDEX bank_connections_requisition_id_key ON public.bank_connections USING btree (requisition_id)
+idx|CREATE UNIQUE INDEX bank_setup_events_pkey ON public.bank_setup_events USING btree (id)
+idx|CREATE UNIQUE INDEX bank_transactions_bank_account_id_provider_transaction_id_key ON public.bank_transactions USING btree (bank_account_id, provider_transaction_id)
+idx|CREATE UNIQUE INDEX bank_transactions_pkey ON public.bank_transactions USING btree (id)
+idx|CREATE UNIQUE INDEX gym_body_log_pkey ON public.gym_body_log USING btree (id)
+idx|CREATE UNIQUE INDEX gym_days_pkey ON public.gym_days USING btree (id)
+idx|CREATE UNIQUE INDEX gym_exercises_pkey ON public.gym_exercises USING btree (id)
+idx|CREATE UNIQUE INDEX gym_routines_pkey ON public.gym_routines USING btree (id)
+idx|CREATE UNIQUE INDEX gym_schedule_pkey ON public.gym_schedule USING btree (weekday)
+idx|CREATE UNIQUE INDEX gym_sessions_pkey ON public.gym_sessions USING btree (id)
+idx|CREATE UNIQUE INDEX gym_sets_pkey ON public.gym_sets USING btree (id)
+idx|CREATE UNIQUE INDEX mind_captures_pkey ON public.mind_captures USING btree (id)
+idx|CREATE UNIQUE INDEX mind_device_sessions_pkey ON public.mind_device_sessions USING btree (id)
+idx|CREATE UNIQUE INDEX mind_device_sessions_token_hash_key ON public.mind_device_sessions USING btree (token_hash)
+idx|CREATE UNIQUE INDEX mind_devices_pkey ON public.mind_devices USING btree (id)
+idx|CREATE UNIQUE INDEX mind_devices_token_hash_key ON public.mind_devices USING btree (token_hash)
+idx|CREATE UNIQUE INDEX notification_log_pkey ON public.notification_log USING btree (id)
+idx|CREATE UNIQUE INDEX notification_preferences_pkey ON public.notification_preferences USING btree (id)
+idx|CREATE UNIQUE INDEX notification_queue_pkey ON public.notification_queue USING btree (id)
+idx|CREATE UNIQUE INDEX push_activation_codes_pkey ON public.push_activation_codes USING btree (code_hash)
+idx|CREATE UNIQUE INDEX push_subscriptions_endpoint_key ON public.push_subscriptions USING btree (endpoint)
+idx|CREATE UNIQUE INDEX push_subscriptions_pkey ON public.push_subscriptions USING btree (id)
+pol|0
+rls|bank_accounts|t
+rls|bank_connections|t
+rls|bank_setup_events|t
+rls|bank_transactions|t
+rls|gym_body_log|t
+rls|gym_days|t
+rls|gym_exercises|t
+rls|gym_routines|t
+rls|gym_schedule|t
+rls|gym_sessions|t
+rls|gym_sets|t
+rls|mind_captures|t
+rls|mind_device_sessions|t
+rls|mind_devices|t
+rls|notification_log|t
+rls|notification_preferences|t
+rls|notification_queue|t
+rls|push_activation_codes|t
+rls|push_subscriptions|t
+seq|bank_setup_events_id_seq
+seq|notification_log_id_seq
+trg|gym_exercises|gym_exercises_touch_updated_at|CREATE TRIGGER gym_exercises_touch_updated_at BEFORE UPDATE ON public.gym_exercises FOR EACH ROW EXECUTE FUNCTION touch_gym_exercise_updated_at()
+trg|mind_captures|mind_captures_touch_updated_at|CREATE TRIGGER mind_captures_touch_updated_at BEFORE UPDATE ON public.mind_captures FOR EACH ROW EXECUTE FUNCTION mind_touch_updated_at()
+trg|mind_captures|mind_normalize_spoken_time_title_trg|CREATE TRIGGER mind_normalize_spoken_time_title_trg BEFORE INSERT OR UPDATE OF raw_text, title ON public.mind_captures FOR EACH ROW EXECUTE FUNCTION mind_normalize_spoken_time_title()
+trg|notification_queue|apply_notification_preferences|CREATE TRIGGER apply_notification_preferences BEFORE INSERT ON public.notification_queue FOR EACH ROW EXECUTE FUNCTION private.apply_notification_preferences()
