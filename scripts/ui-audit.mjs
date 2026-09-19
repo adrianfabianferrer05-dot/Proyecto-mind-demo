@@ -81,6 +81,11 @@ async function run(width) {
     console.log(`  ${ok ? 'ok  ' : 'FALLA'} ${name}${extra && !ok ? ' · ' + extra : ''}`);
   };
 
+  /* Con SM_SHOTS=<carpeta> ademas de comprobar, se guarda como queda. Sirve para
+     mirar el diseño con ojos, que es lo unico que detecta que algo es feo. */
+  const shotDir = process.env.SM_SHOTS;
+  const shot = (name) => (shotDir ? page.screenshot({ path: `${shotDir}/${width}-${name}.png` }) : Promise.resolve());
+
   const { server, port } = await serve();
   const browser = await launch();
   const ctx = await browser.newContext({
@@ -140,8 +145,21 @@ async function run(width) {
     if (/\/gym(\?|$)/.test(url))
       return route.fulfill({ json: { ok: true, routine: { id: 'r1', name: 'Mi rutina' }, days: [], exercises: [], activeSession: null, activeSets: [], recentSets: [], bests: [], body: [], stats: {}, history: [{ id: 'h1', day_id: 'd1', day_name_snapshot: 'Torso', started_at: day(-1, 18), finished_at: day(-1, 19), set_count: 18, volume_kg: 5400 }] } });
     if (url.includes('mind-config')) return route.fulfill({ json: { ok: true, aiConfigured: true } });
-    if (url.includes('bank-config')) return route.fulfill({ json: { ok: true, configured: false } });
-    if (url.includes('/bank')) return route.fulfill({ json: { ok: true, connected: false, accounts: [], transactions: [] } });
+    if (url.includes('bank-config')) return route.fulfill({ json: { ok: true, configured: true } });
+    if (url.includes('/bank'))
+      return route.fulfill({
+        json: {
+          ok: true,
+          bank: {
+            connection: { status: 'AUTHORIZED', last_synced_at: new Date().toISOString() },
+            accounts: [{ id: 'a1', name: 'Cajamar', current_balance: 12345.67, available_balance: 12345.67, currency: 'EUR' }],
+            transactions: [
+              { id: 't1', description: 'Nomina', amount: 1850.4, currency: 'EUR', booked_at: day(-3) },
+              { id: 't2', description: 'Mercadona', amount: -84.2, currency: 'EUR', booked_at: day(-1) },
+            ],
+          },
+        },
+      });
     if (url.includes('/mind')) {
       if (req.method() === 'POST') {
         const body = req.postDataJSON() || {};
@@ -371,6 +389,33 @@ async function run(width) {
   const dinero = await page.evaluate(() => euro(1234.56));
   step('el dinero se escribe como en España', dinero.replace(/ /g, ' ') === '1.234,56 €', dinero);
 
+  /* ── Dinero: en euros y como se escriben en España ─────────────────────── */
+  await page.locator('.nav button[data-view="dinero"]').click();
+  await page.waitForTimeout(900);
+  const saldo = (await page.locator('#moneyNet').textContent()).replace(/\u00a0/g, ' ');
+  step('el saldo sale con separador de miles', saldo === '12.345,67 €', saldo);
+  step('y dice de donde sale ese numero', (await page.locator('#moneyCaption').textContent()).includes('bancario'));
+  step('el banco conectado se nota', (await page.locator('#bankNoteText').textContent()).includes('Cajamar'));
+  const cifras = await page.locator('#moneyIn, #moneyOut, #moneyReceivable, #moneyPayable').allTextContents();
+  step('ninguna cifra se queda en blanco', cifras.every((t) => /\d/.test(t)), cifras.join(' | '));
+
+  await page.locator('.nav button[data-view="hoy"]').click();
+  await page.waitForTimeout(700);
+  const pulso = await page.locator('#todayPulse .pulse-tile').nth(1).textContent();
+  step('Hoy y Dinero cuentan el mes igual', pulso.includes('banco') && /\d/.test(pulso), pulso.replace(/\s+/g, ' ').trim());
+
+  /* ── Gym: la rutina y el cuerpo se pintan ──────────────────────────────── */
+  await page.locator('.nav button[data-view="gym"]').click();
+  await page.waitForTimeout(1400);
+  step('Gym abre con la rutina', (await page.locator('#gym.active').count()) === 1);
+  step('el historial de entrenos se ve', (await page.locator('.gym-history-card, .gym-empty').count()) > 0);
+  const cuerpo = page.locator('[data-gym-tab="body"]');
+  if (await cuerpo.count()) {
+    await cuerpo.click();
+    await page.waitForTimeout(1200);
+    step('el panel del cuerpo se dibuja', (await page.locator('#gym svg').count()) > 0);
+  }
+
   /* ── iPhone: zonas tactiles y ancho ────────────────────────────────────── */
   await page.locator('.nav button[data-view="semana"]').click();
   await page.waitForTimeout(500);
@@ -386,6 +431,14 @@ async function run(width) {
   step('todo lo tocable llega a 44px', pequenos.length === 0, pequenos.join(' | '));
   step('sin scroll horizontal', !(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth)));
   step('sin errores de consola', errors.length === 0, errors.slice(0, 3).join(' | '));
+
+  if (shotDir) {
+    for (const view of ['hoy', 'mente', 'semana', 'dinero', 'gym', 'archivo']) {
+      await page.locator(`.nav button[data-view="${view}"]`).click();
+      await page.waitForTimeout(900);
+      await shot(view);
+    }
+  }
 
   await browser.close();
   server.close();

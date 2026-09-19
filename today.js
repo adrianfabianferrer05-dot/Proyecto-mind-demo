@@ -27,17 +27,18 @@
       ? (gymState.data.history || []).filter((h) => new Date(h.started_at).getTime() >= since).length
       : null;
 
-    const money = active.filter(
-      (c) => ['expense', 'income'].includes(c.kind) && c.amount != null &&
-        new Date(c.created_at).getMonth() === now.getMonth() &&
-        new Date(c.created_at).getFullYear() === now.getFullYear()
-    );
-    const net = money.reduce((s, c) => s + (c.kind === 'income' ? 1 : -1) * Number(c.amount), 0);
+    /* El mes no se recalcula aqui: lo calcula `render()` en app.js y lo deja en
+       `state.money`. Si se hiciera dos veces acabarian diciendo cosas distintas, que
+       es justo lo que pasaba cuando Dinero pasaba al banco y esto no. */
+    const m = state.money || {};
+    const usaBanco = !!m.bankConnected && !!m.hasBank;
+    const net = usaBanco ? m.netBank : m.netCaptured || 0;
+    const hasMoney = usaBanco || !!m.hasCaptured;
 
     const open = active.filter((c) => c.kind === 'task' && !c.completed_at);
     const overdue = open.filter((c) => c.due_at && new Date(c.due_at) < now).length;
 
-    return { sessions, net, hasMoney: money.length > 0, open: open.length, overdue };
+    return { sessions, net, hasMoney, usaBanco, open: open.length, overdue };
   }
 
   function render() {
@@ -56,7 +57,7 @@
         view: 'dinero',
         label: 'Este mes',
         value: f.hasMoney ? euro(f.net) : '—',
-        foot: f.hasMoney ? (f.net >= 0 ? 'balance capturado' : 'balance capturado') : 'sin movimientos',
+        foot: f.hasMoney ? (f.usaBanco ? 'en el banco' : 'balance capturado') : 'sin movimientos',
         lit: false,
         tone: f.hasMoney ? (f.net >= 0 ? 'positive' : 'negative') : '',
       },
