@@ -37,8 +37,8 @@ async function eb(path:string,init:RequestInit={}){
 function expired(e:any){return e?.providerCode==="EXPIRED_SESSION"||/session is expired|expired session/i.test(String(e?.message||""))}
 
 async function latest(deviceId:string){const r=await sql`select * from public.bank_connections where device_session_id=${deviceId}::uuid and provider='enablebanking' and revoked_at is null order by (status='AUTHORIZED') desc,created_at desc limit 1`;return r[0]||null}
-function accountUid(a:any){return String(a?.uid||a?.account_uid||a?.id||"")}
-function accountIban(a:any){return String(a?.account_id?.iban||a?.iban||"")}
+function accountUid(a:any){return typeof a==="string"?a:String(a?.uid||a?.account_uid||a?.id||"")}
+function accountIban(a:any){return typeof a==="string"?"":String(a?.account_id?.iban||a?.iban||"")}
 function balancePick(out:any){const list=Array.isArray(out?.balances)?out.balances:[];const n=(x:any)=>{const v=Number(x?.balance_amount?.amount);return Number.isFinite(v)?v:null};const booked=list.find((x:any)=>["CLBD","ITBD","XPCD"].includes(String(x?.balance_type)))||list[0];const available=list.find((x:any)=>["CLAV","ITAV","FWAV"].includes(String(x?.balance_type)))||booked;return {current:n(booked),available:n(available),currency:String(booked?.balance_amount?.currency||available?.balance_amount?.currency||"EUR")}}
 function txAmount(t:any){const v=Number(t?.transaction_amount?.amount);if(!Number.isFinite(v))return null;return String(t?.credit_debit_indicator)==="DBIT"?-Math.abs(v):Math.abs(v)}
 function txMerchant(t:any,amount:number){const party=amount<0?t?.creditor:t?.debtor;return String(party?.name||"").slice(0,180)||null}
