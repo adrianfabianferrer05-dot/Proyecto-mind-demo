@@ -1,4 +1,4 @@
-const CACHE='segunda-mente-v32';
+const CACHE='segunda-mente-v33';
 const STATE_CACHE='segunda-mente-state-v1';
 const PUSH_MARKER='./__push_registered__';
 const BANK_URL='https://dabzmzwnvzoeywyflkoo.supabase.co/functions/v1/bank';
