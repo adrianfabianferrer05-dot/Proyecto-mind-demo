@@ -23,7 +23,9 @@ test('el movimiento tiene alternativa para reduced motion', () => {
   assert.match(css, /animation:none!important/);
 });
 
-test('el service worker fuerza una cache nueva para el pulido', () => {
-  assert.match(sw, /segunda-mente-v33/);
+test('el service worker mantiene una cache posterior al pulido inicial', () => {
+  const match = sw.match(/const CACHE='segunda-mente-v(\d+)'/);
+  assert.ok(match, 'el service worker debe tener una versión de caché explícita');
+  assert.ok(Number(match[1]) >= 34, `la caché no puede retroceder: v${match[1]}`);
   assert.match(sw, /app-polish\.css\?v=7/);
 });
