@@ -96,9 +96,9 @@ function gymScheduleIsSet(data) {
   }
 
   /* Se engancha a `renderRoutine` y no a `renderGym` por un motivo concreto:
-     `gym-nav.js` no envuelve `renderGym`, lo sustituye, asi que cualquier capa
-     colgada de ahi se queda sin ejecutar y no avisa. `renderRoutine` si lo llaman
-     todos, y ademas es el sitio correcto: esta seccion es parte del panel de rutina. */
+     `gym-nav.js` no envuelve `renderGym`, lo sustituye, así que cualquier capa
+     colgada de ahí se queda sin ejecutar y no avisa. `renderRoutine` sí lo llaman
+     todos, y además es el sitio correcto: esta sección es parte del panel de rutina. */
   const baseRoutine = window.renderRoutine;
   if (typeof baseRoutine === 'function') {
     window.renderRoutine = function () {
@@ -133,4 +133,13 @@ function gymScheduleIsSet(data) {
     };
     setTimeout(buscar, 120);
   };
+})();
+
+/* El editor estructural se mantiene en su propio fichero para que la lógica semanal
+   siga siendo pequeña. Se carga aquí porque gym-week.js ya forma parte del bundle
+   estable de Gym y así una PWA instalada recibe el editor sin duplicar gym.js. */
+(function loadRoutineEditor(){
+  if(document.querySelector('script[data-gym-routine-editor]'))return;
+  const css=document.createElement('link');css.rel='stylesheet';css.href='gym-routine-editor.css?v=1';css.dataset.gymRoutineEditor='1';document.head.appendChild(css);
+  const script=document.createElement('script');script.src='gym-routine-editor.js?v=1';script.dataset.gymRoutineEditor='1';document.body.appendChild(script);
 })();
