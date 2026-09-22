@@ -8,7 +8,7 @@ const sw=readFileSync(new URL('../sw.js',import.meta.url),'utf8');
 test('editar ejercicios sigue disponible aunque haya un entrenamiento abierto',()=>{
   assert.doesNotMatch(enhance,/!gymState\.data\|\|gymState\.data\.activeSession\)return/);
   assert.match(enhance,/const sessionActive=!!gymState\.data\.activeSession/);
-  assert.match(enhance,/sessionActive[\s\S]*data-gym-extra=\\"edit\\"/);
+  assert.match(enhance,/sessionActive[\s\S]*data-gym-extra="edit"/);
 });
 
 test('tocar una fila de ejercicio abre el formulario incluso si falta la decoracion previa',()=>{
