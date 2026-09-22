@@ -66,3 +66,20 @@
   const target=document.getElementById('gymContent');if(target)new MutationObserver(decorate).observe(target,{childList:true,subtree:true});
   decorate();
 })();
+
+/* iOS keeps transformed/animated views as containing blocks for fixed descendants.
+   The Gym sheet used to live inside .gym-view, so its backdrop opened correctly while
+   the actual bottom panel could be positioned at the bottom of the whole Gym content,
+   far below the visible viewport. Mount the sheet at document.body and keep both the
+   base Gym handlers and the structural routine-editor handlers delegated to it. */
+(function mountGymSheetAtViewport(){
+  const sheet=document.getElementById('gymSheet');
+  if(!sheet)return;
+  if(sheet.parentElement!==document.body)document.body.appendChild(sheet);
+  if(sheet.dataset.viewportPortal==='1')return;
+  sheet.dataset.viewportPortal='1';
+  sheet.addEventListener('click',e=>{if(typeof routineEditorClick==='function')routineEditorClick(e)},true);
+  sheet.addEventListener('submit',e=>{if(typeof routineEditorSubmit==='function')routineEditorSubmit(e)},true);
+  sheet.addEventListener('click',e=>{if(typeof gymClick==='function')gymClick(e)});
+  sheet.addEventListener('submit',e=>{if(typeof gymSubmit==='function')gymSubmit(e)});
+})();
