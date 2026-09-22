@@ -7,13 +7,20 @@
   const iconDown='<svg viewBox="0 0 24 24"><path d="m6 10 6 6 6-6"/></svg>';
 
   function enhanceRoutine(){
-    if(typeof gymState==='undefined'||!gymState.data||gymState.data.activeSession)return;
+    if(typeof gymState==='undefined'||!gymState.data)return;
+    const sessionActive=!!gymState.data.activeSession;
     document.querySelectorAll('.gym-day[data-day-id]').forEach(card=>{
       const dayId=card.dataset.dayId,rows=[...card.querySelectorAll('.gym-preview-row')],xs=(gymState.data.exercises||[]).filter(x=>x.day_id===dayId).sort((a,b)=>a.position-b.position);
       rows.forEach((row,i)=>{
-        const ex=xs[i];if(!ex||row.dataset.enhanced)return;row.dataset.enhanced='1';row.dataset.exerciseId=ex.id;
+        const ex=xs[i];if(!ex)return;
+        row.dataset.exerciseId=ex.id;
         row.style.cursor='pointer';row.setAttribute('role','button');row.setAttribute('tabindex','0');row.setAttribute('aria-label',`Editar ${ex.name}`);
-        const right=row.querySelector('span');if(right)right.insertAdjacentHTML('beforebegin',`<span class="gym-inline-actions"><button class="gym-mini-icon" data-gym-extra="up" data-day="${dayId}" data-id="${ex.id}" aria-label="Subir ${ex.name}" ${i===0?'disabled':''}>${iconUp}</button><button class="gym-mini-icon" data-gym-extra="down" data-day="${dayId}" data-id="${ex.id}" aria-label="Bajar ${ex.name}" ${i===xs.length-1?'disabled':''}>${iconDown}</button><button class="gym-mini-icon edit" data-gym-extra="edit" data-day="${dayId}" data-id="${ex.id}" aria-label="Editar ${ex.name}">${iconEdit}</button></span>`);
+        if(row.dataset.enhanced)return;row.dataset.enhanced='1';
+        const right=row.querySelector('span');if(!right)return;
+        const actions=sessionActive
+          ? `<span class="gym-inline-actions"><button class="gym-mini-icon edit" data-gym-extra="edit" data-day="${dayId}" data-id="${ex.id}" aria-label="Editar ${ex.name}">${iconEdit}</button></span>`
+          : `<span class="gym-inline-actions"><button class="gym-mini-icon" data-gym-extra="up" data-day="${dayId}" data-id="${ex.id}" aria-label="Subir ${ex.name}" ${i===0?'disabled':''}>${iconUp}</button><button class="gym-mini-icon" data-gym-extra="down" data-day="${dayId}" data-id="${ex.id}" aria-label="Bajar ${ex.name}" ${i===xs.length-1?'disabled':''}>${iconDown}</button><button class="gym-mini-icon edit" data-gym-extra="edit" data-day="${dayId}" data-id="${ex.id}" aria-label="Editar ${ex.name}">${iconEdit}</button></span>`;
+        right.insertAdjacentHTML('beforebegin',actions);
       });
     });
   }
@@ -35,16 +42,27 @@
   function decorate(){if(decorating)return;decorating=true;requestAnimationFrame(()=>{enhanceRoutine();enhanceRpe();enhanceProgress();decorating=false})}
 
   async function reorder(dayId,id,dir){
+    if(gymState.data?.activeSession){toast('Termina el entrenamiento actual antes de cambiar el orden.');return}
     const xs=(gymState.data?.exercises||[]).filter(x=>x.day_id===dayId).sort((a,b)=>a.position-b.position),i=xs.findIndex(x=>x.id===id),j=i+dir;if(i<0||j<0||j>=xs.length)return;
     [xs[i],xs[j]]=[xs[j],xs[i]];
     try{const out=await gymApi('POST',{action:'reorder_exercises',ids:xs.map(x=>x.id)});gymState.data=out;renderGym();toast('Orden actualizado')}catch(e){toast(e?.message||'No pude mover el ejercicio')}
   }
+  function openRowExercise(row){
+    const card=row?.closest?.('.gym-day[data-day-id]');if(!card)return;
+    const dayId=card.dataset.dayId;
+    let id=row.dataset.exerciseId;
+    if(!id){
+      const rows=[...card.querySelectorAll('.gym-preview-row')],i=rows.indexOf(row),xs=(gymState.data?.exercises||[]).filter(x=>x.day_id===dayId).sort((a,b)=>a.position-b.position);
+      id=xs[i]?.id;
+    }
+    if(id)openExerciseSheet(dayId,id);
+  }
   document.addEventListener('click',e=>{
     const extra=e.target.closest?.('[data-gym-extra]');
     if(extra){e.preventDefault();e.stopPropagation();const {gymExtra,day,id}=extra.dataset;if(gymExtra==='edit')openExerciseSheet(day,id);if(gymExtra==='up')reorder(day,id,-1);if(gymExtra==='down')reorder(day,id,1);return}
-    const row=e.target.closest?.('.gym-preview-row[data-exercise-id]');if(row&&!e.target.closest('button')){const card=row.closest('.gym-day'),id=row.dataset.exerciseId;openExerciseSheet(card.dataset.dayId,id)}
+    const row=e.target.closest?.('.gym-day[data-day-id] .gym-preview-row');if(row&&!e.target.closest('button'))openRowExercise(row);
   },true);
-  document.addEventListener('keydown',e=>{const row=e.target.closest?.('.gym-preview-row[data-exercise-id]');if(row&&(e.key==='Enter'||e.key===' ')){e.preventDefault();openExerciseSheet(row.closest('.gym-day').dataset.dayId,row.dataset.exerciseId)}});
+  document.addEventListener('keydown',e=>{const row=e.target.closest?.('.gym-day[data-day-id] .gym-preview-row');if(row&&(e.key==='Enter'||e.key===' ')){e.preventDefault();openRowExercise(row)}});
   const target=document.getElementById('gymContent');if(target)new MutationObserver(decorate).observe(target,{childList:true,subtree:true});
   decorate();
 })();
