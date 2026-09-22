@@ -1,9 +1,9 @@
-const CACHE='segunda-mente-v34';
+const CACHE='segunda-mente-v35';
 const STATE_CACHE='segunda-mente-state-v1';
 const PUSH_MARKER='./__push_registered__';
 const BANK_URL='https://dabzmzwnvzoeywyflkoo.supabase.co/functions/v1/bank';
 const BANK_BALANCE_URL='https://dabzmzwnvzoeywyflkoo.supabase.co/functions/v1/bank-balance';
-const ASSETS=['./','./index.html','./app.css?v=8','./app-polish.css?v=7','./app.js?v=17','./app-enhance.js?v=7','./memory-ui.js?v=2','./gym.css?v=1','./gym-enhance.css?v=2','./gym-body.css?v=2','./memory-ui.css?v=2','./gym.js?v=2','./gym-weights.js?v=2','./week.js?v=4','./week.css?v=4','./gym-week.js?v=2','./gym-week.css?v=1','./money-ui.js?v=1','./money-ui.css?v=1','./today.js?v=3','./today.css?v=1','./voice-capture.js?v=1','./voice-capture.css?v=1','./edit-api.js?v=2','./edit-ui.js?v=2','./edit-ui.css?v=2','./prefs-ui.js?v=1','./gym-weights-core.js?v=1','./gym-nav.js?v=2','./gym-anatomy.js?v=2','./gym-body.js?v=2','./activar-notificaciones.html','./manifest.webmanifest','./icon.svg'];
+const ASSETS=['./','./index.html','./app.css?v=8','./app-polish.css?v=7','./app.js?v=17','./app-enhance.js?v=7','./memory-ui.js?v=2','./gym.css?v=1','./gym-enhance.css?v=2','./gym-body.css?v=2','./memory-ui.css?v=2','./gym.js?v=2','./gym-enhance.js?v=1','./gym-weights.js?v=2','./week.js?v=4','./week.css?v=4','./gym-week.js?v=2','./gym-week.css?v=1','./gym-routine-editor.js?v=1','./gym-routine-editor.css?v=1','./money-ui.js?v=1','./money-ui.css?v=1','./today.js?v=3','./today.css?v=1','./voice-capture.js?v=1','./voice-capture.css?v=1','./edit-api.js?v=2','./edit-ui.js?v=2','./edit-ui.css?v=2','./prefs-ui.js?v=1','./gym-weights-core.js?v=1','./gym-nav.js?v=2','./gym-anatomy.js?v=2','./gym-body.js?v=2','./activar-notificaciones.html','./manifest.webmanifest','./icon.svg'];
 
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',event=>{event.waitUntil((async()=>{const keys=await caches.keys();await Promise.all(keys.filter(key=>key!==CACHE&&key!==STATE_CACHE).map(key=>caches.delete(key)));await self.clients.claim();})());});
