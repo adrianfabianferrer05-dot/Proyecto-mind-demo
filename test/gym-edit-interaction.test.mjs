@@ -23,8 +23,18 @@ test('durante un entrenamiento no se permite reordenar pero si editar',()=>{
   assert.match(enhance,/gymExtra==='edit'\)openExerciseSheet\(day,id\)/);
 });
 
+test('el sheet del Gym vive en el viewport y no dentro de la vista animada de iOS',()=>{
+  assert.match(enhance,/function mountGymSheetAtViewport\(\)/);
+  assert.match(enhance,/document\.body\.appendChild\(sheet\)/);
+  assert.match(enhance,/sheet\.dataset\.viewportPortal='1'/);
+  assert.match(enhance,/typeof gymClick==='function'/);
+  assert.match(enhance,/typeof gymSubmit==='function'/);
+  assert.match(enhance,/typeof routineEditorClick==='function'/);
+  assert.match(enhance,/typeof routineEditorSubmit==='function'/);
+});
+
 test('la PWA fuerza una cache nueva e incluye todos los ficheros del editor',()=>{
-  assert.match(sw,/const CACHE='segunda-mente-v35'/);
+  assert.match(sw,/const CACHE='segunda-mente-v36'/);
   for(const asset of ['gym-enhance.js?v=1','gym-routine-editor.js?v=1','gym-routine-editor.css?v=1'])
     assert.ok(sw.includes(asset),asset);
 });
