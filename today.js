@@ -221,3 +221,81 @@
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install); else install();
 })();
+
+/* Rutina laboral visible en Hoy. Se alimenta del perfil estructurado guardado en
+   mind_captures: si la rutina cambia en el backend, esta tarjeta cambia con ella. */
+(function () {
+  if (typeof state === 'undefined') return;
+
+  const routine = () => (state.captures || []).find((c) =>
+    !c.archived_at && c.source === 'system_routine' && c.metadata?.routine_profile === 'weekday_v1' && c.metadata?.active !== false
+  );
+
+  function timeFor(item) {
+    if (!item || typeof item !== 'object') return '';
+    if (item.start && item.end) return `${item.start}–${item.end}`;
+    if (item.time) return `${item.approx ? '~' : ''}${item.time}`;
+    return '';
+  }
+
+  function morningLine(item) {
+    const detail = item?.detail ? `<span>${esc(item.detail)}</span>` : '';
+    return `<div class="routine-line"><div class="routine-time">${esc(timeFor(item))}</div><div class="routine-copy"><strong>${esc(item?.label || '')}</strong>${detail}</div></div>`;
+  }
+
+  function renderRoutine() {
+    const capture = routine();
+    let host = document.getElementById('weekdayRoutine');
+    if (!capture) { if (host) host.remove(); return; }
+    if (!host) {
+      host = document.createElement('section');
+      host.id = 'weekdayRoutine';
+      host.className = 'weekday-routine';
+      const pulse = document.getElementById('todayPulse');
+      const focus = document.getElementById('focusBlock');
+      if (pulse) pulse.after(host); else if (focus) focus.after(host); else return;
+    }
+
+    const meta = capture.metadata || {};
+    const morning = Array.isArray(meta.morning) ? meta.morning : [];
+    const afternoon = Array.isArray(meta.afternoon) ? meta.afternoon : [];
+    const friday = meta.friday_extra && typeof meta.friday_extra === 'object' ? meta.friday_extra : null;
+    const morningTime = meta.morning_time || '06:00';
+    const afternoonTime = meta.summary_time || '15:20';
+    const fridayTime = friday ? `${friday.start || '20:00'}–${friday.approx_end ? '~' : ''}${friday.end || '00:30'}` : '';
+
+    host.innerHTML = `
+      <div class="routine-head">
+        <div><span class="routine-kicker">Mi rutina</span><h2>Lunes a viernes</h2></div>
+        <span class="routine-days">L–V</span>
+      </div>
+      <div class="routine-alerts" aria-label="Avisos de rutina">
+        <span class="routine-alert">Aviso ${esc(morningTime)} · al levantarte</span>
+        <span class="routine-alert">Aviso ${esc(afternoonTime)} · al salir del trabajo</span>
+      </div>
+      <div class="routine-groups">
+        <div class="routine-group">
+          <span class="routine-group-title">Mañana</span>
+          ${morning.length ? morning.map(morningLine).join('') : '<div class="routine-copy"><strong>Rutina de mañana</strong></div>'}
+        </div>
+        <div class="routine-group">
+          <span class="routine-group-title">Después del trabajo · flexible</span>
+          <ul class="routine-flex">${afternoon.map((item) => `<li>${esc(item)}</li>`).join('')}</ul>
+        </div>
+      </div>
+      ${friday ? `<div class="routine-friday"><strong>Viernes · ${esc(fridayTime)}</strong><br>${esc(friday.label || 'Camarero')}</div>` : ''}
+    `;
+  }
+
+  function installRoutine() {
+    const base = window.render;
+    if (typeof base === 'function') window.render = function () {
+      const out = base.apply(this, arguments);
+      renderRoutine();
+      return out;
+    };
+    renderRoutine();
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', installRoutine); else installRoutine();
+})();

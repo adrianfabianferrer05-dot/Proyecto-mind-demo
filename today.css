@@ -14,3 +14,27 @@
 .pulse-foot{display:block;margin-top:4px;color:var(--muted);font-size:9px;line-height:1.35}
 @media(max-width:360px){.today-pulse{gap:6px}.pulse-tile{padding:10px 9px 11px}.pulse-value{font-size:17px}}
 @media(prefers-reduced-motion:reduce){.pulse-tile{transition:none}}
+
+/* La rutina no vive como una nota: se enseña completa en Hoy y conserva la tarde flexible. */
+.weekday-routine{margin-top:18px;border:1px solid var(--line);border-radius:24px;background:linear-gradient(165deg,rgba(255,255,255,.045),rgba(255,255,255,.018));overflow:hidden}
+.routine-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:18px 18px 15px;border-bottom:1px solid var(--line)}
+.routine-kicker{display:block;color:var(--dim);font-size:9px;letter-spacing:.11em;text-transform:uppercase;margin-bottom:5px}
+.routine-head h2{margin:0;font-size:21px;line-height:1.06;letter-spacing:-.035em}
+.routine-days{display:inline-flex;align-items:center;min-height:27px;padding:0 10px;border:1px solid rgba(202,255,88,.22);border-radius:999px;color:var(--good);font-size:10px;font-weight:650;white-space:nowrap;background:rgba(202,255,88,.05)}
+.routine-alerts{display:flex;gap:7px;flex-wrap:wrap;padding:12px 18px;border-bottom:1px solid var(--line)}
+.routine-alert{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:10px}
+.routine-alert::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--good);box-shadow:0 0 0 4px rgba(202,255,88,.07)}
+.routine-groups{padding:5px 18px 4px}
+.routine-group{padding:14px 0;border-bottom:1px solid var(--line)}
+.routine-group:last-child{border-bottom:0}
+.routine-group-title{display:block;color:var(--dim);font-size:9px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px}
+.routine-line{display:grid;grid-template-columns:66px minmax(0,1fr);gap:11px;padding:6px 0;align-items:start}
+.routine-time{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.routine-copy strong{display:block;font-size:13px;font-weight:640;letter-spacing:-.012em}
+.routine-copy span{display:block;margin-top:2px;color:var(--muted);font-size:10px;line-height:1.45}
+.routine-flex{margin:3px 0 0;padding:0;list-style:none;display:grid;gap:8px}
+.routine-flex li{position:relative;padding-left:15px;color:var(--ink);font-size:12px;line-height:1.45}
+.routine-flex li::before{content:'';position:absolute;left:0;top:.55em;width:5px;height:5px;border-radius:50%;background:var(--muted)}
+.routine-friday{margin:0 18px 18px;padding:12px 13px;border-radius:16px;background:rgba(255,255,255,.035);border:1px solid var(--line);font-size:11px;line-height:1.45;color:var(--muted)}
+.routine-friday strong{color:var(--ink)}
+@media(max-width:360px){.routine-head{padding:16px 15px 13px}.routine-alerts,.routine-groups{padding-left:15px;padding-right:15px}.routine-line{grid-template-columns:59px minmax(0,1fr)}.routine-friday{margin-left:15px;margin-right:15px}}
