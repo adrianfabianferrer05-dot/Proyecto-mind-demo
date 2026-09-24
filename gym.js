@@ -116,7 +116,25 @@ function historyPreview(){
   const hist=gymState.data?.history||[];if(!hist.length)return '';
   return `<div class="gym-section"><div class="gym-section-head"><h2>Últimas sesiones</h2><button data-gym-action="tab-history">Ver todas</button></div><div class="gym-history">${hist.slice(0,3).map(historyCard).join('')}</div></div>`;
 }
-function historyCard(h){return `<div class="gym-history-card"><div><b>${gEsc(h.day_name_snapshot||'Entreno')}</b><span>${shortDate(h.started_at)} · ${gNum(h.set_count)} series</span></div><span class="gym-history-vol">${new Intl.NumberFormat('es-ES',{maximumFractionDigits:0}).format(gNum(h.volume_kg))} kg</span></div>`}
+function historySetsFor(sessionId){return (gymState.data?.historySets||[]).filter(s=>s.session_id===sessionId)}
+function previousSetsForExercise(exerciseId){
+  const d=gymState.data||{},sessions=d.history||[],sets=d.historySets||[];
+  for(const session of sessions){
+    const found=sets.filter(s=>s.session_id===session.id&&s.exercise_id===exerciseId&&!s.is_warmup);
+    if(found.length)return found;
+  }
+  return [];
+}
+function historyCard(h){
+  const sets=historySetsFor(h.id),groups=[];
+  for(const s of sets){
+    let group=groups.find(g=>(s.exercise_id&&g.id===s.exercise_id)||(!s.exercise_id&&g.name===s.exercise_name_snapshot));
+    if(!group){group={id:s.exercise_id||'',name:s.exercise_name_snapshot||'Ejercicio',sets:[]};groups.push(group)}
+    group.sets.push(s);
+  }
+  const detail=groups.length?`<div class="gym-history-detail">${groups.map(g=>`<div class="gym-history-exercise"><b>${gEsc(g.name)}</b><div class="gym-history-sets">${g.sets.map(s=>`<span class="${s.is_warmup?'warmup':''}">${kg(s.weight_kg)} × ${gNum(s.reps)} reps${s.rpe?` · RPE ${gEsc(s.rpe)}`:''}${s.is_warmup?' · calent.':''}</span>`).join('')}</div></div>`).join('')}</div>`:'<div class="gym-history-detail empty">No hay series guardadas en esta sesión.</div>';
+  return `<details class="gym-history-card gym-history-session"><summary><div><b>${gEsc(h.day_name_snapshot||'Entreno')}</b><span>${shortDate(h.started_at)} · ${gNum(h.set_count)} series</span></div><span class="gym-history-vol">${new Intl.NumberFormat('es-ES',{maximumFractionDigits:0}).format(gNum(h.volume_kg))} kg</span><span class="gym-history-chevron">⌄</span></summary>${detail}</details>`
+}
 
 function renderHistory(){
   const d=gymState.data,h=d.history||[];
@@ -134,9 +152,9 @@ function renderWorkout(){
 }
 
 function liveExercise(ex){
-  const sets=setsForExercise(ex.id),recent=recentForExercise(ex.id),best=bestForExercise(ex.id),draft=gymState.drafts.get(ex.id)||{weight:0,reps:ex.rep_min||8,rpe:'',warmup:false};
+  const sets=setsForExercise(ex.id),recent=recentForExercise(ex.id),best=bestForExercise(ex.id),previous=previousSetsForExercise(ex.id),draft=gymState.drafts.get(ex.id)||{weight:0,reps:ex.rep_min||8,rpe:'',warmup:false};
   const chips=sets.map(s=>`<button class="gym-set-chip ${s.is_warmup?'warmup':''}" data-gym-action="edit-set" data-id="${gEsc(s.id)}"><b>${kg(s.weight_kg)} × ${s.reps}</b><span>${s.is_warmup?'calentamiento':`Serie ${s.set_number}${s.rpe?` · RPE ${s.rpe}`:''}`}</span></button>`).join('');
-  return `<article class="gym-live-card" data-exercise="${gEsc(ex.id)}"><div class="gym-live-title"><div><h3>${gEsc(ex.name)}</h3><small>${ex.target_sets} series · ${ex.rep_min}${ex.rep_max!==ex.rep_min?`–${ex.rep_max}`:''} reps · ${Math.round(ex.rest_seconds/60*10)/10} min</small></div><div class="gym-best">${best?`<b>${kg(best.max_weight)}</b>máx · e1RM ${kg(best.best_e1rm)}`:recent?`<b>${kg(recent.weight_kg)} × ${recent.reps}</b>última vez`:'Sin marca previa'}</div></div><div class="gym-sets">${chips||'<span style="color:var(--muted);font-size:10px;padding:9px 2px">Aún no has guardado series.</span>'}</div><div class="gym-entry"><div class="gym-step"><div class="gym-step-label">PESO</div><div class="gym-step-main"><button data-gym-action="weight-minus" data-id="${gEsc(ex.id)}">−</button><input id="gymWeight-${gEsc(ex.id)}" type="number" inputmode="decimal" min="0" step="0.25" value="${gEsc(draft.weight)}"><button data-gym-action="weight-plus" data-id="${gEsc(ex.id)}">+</button></div><div class="gym-step-unit">kg · salto ${ex.increment_kg} kg</div></div><div class="gym-step"><div class="gym-step-label">REPS</div><div class="gym-step-main"><button data-gym-action="reps-minus" data-id="${gEsc(ex.id)}">−</button><input id="gymReps-${gEsc(ex.id)}" type="number" inputmode="numeric" min="0" max="200" value="${gEsc(draft.reps)}"><button data-gym-action="reps-plus" data-id="${gEsc(ex.id)}">+</button></div><div class="gym-step-unit">objetivo ${ex.rep_min}${ex.rep_max!==ex.rep_min?`–${ex.rep_max}`:''}</div></div></div><div class="gym-entry-options"><button class="gym-warmup ${draft.warmup?'active':''}" data-gym-action="warmup" data-id="${gEsc(ex.id)}">Calentamiento</button><select class="gym-rpe" id="gymRpe-${gEsc(ex.id)}" aria-label="RPE"><option value="">RPE —</option>${[6,7,8,9,10].map(n=>`<option value="${n}" ${String(draft.rpe)===String(n)?'selected':''}>RPE ${n}</option>`).join('')}</select><button class="gym-log-set" data-gym-action="log-set" data-id="${gEsc(ex.id)}">Guardar serie</button></div></article>`;
+  return `<article class="gym-live-card" data-exercise="${gEsc(ex.id)}"><div class="gym-live-title"><div><h3>${gEsc(ex.name)}</h3><small>${ex.target_sets} series · ${ex.rep_min}${ex.rep_max!==ex.rep_min?`–${ex.rep_max}`:''} reps · ${Math.round(ex.rest_seconds/60*10)/10} min</small></div><div class="gym-best">${best?`<b>${kg(best.max_weight)}</b>máx · e1RM ${kg(best.best_e1rm)}`:recent?`<b>${kg(recent.weight_kg)} × ${recent.reps}</b>última vez`:'Sin marca previa'}</div></div><div class="gym-previous"><span>ANTERIOR</span>${previous.length?`<div class="gym-previous-sets">${previous.map(s=>`<b>${kg(s.weight_kg)} × ${gNum(s.reps)} reps</b>`).join('')}</div>`:`<b>Sin sesión anterior</b>`}</div><div class="gym-sets">${chips||'<span style="color:var(--muted);font-size:10px;padding:9px 2px">Aún no has guardado series.</span>'}</div><div class="gym-entry"><div class="gym-step"><div class="gym-step-label">PESO</div><div class="gym-step-main"><button data-gym-action="weight-minus" data-id="${gEsc(ex.id)}">−</button><input id="gymWeight-${gEsc(ex.id)}" type="number" inputmode="decimal" min="0" step="0.25" value="${gEsc(draft.weight)}"><button data-gym-action="weight-plus" data-id="${gEsc(ex.id)}">+</button></div><div class="gym-step-unit">kg · salto ${ex.increment_kg} kg</div></div><div class="gym-step"><div class="gym-step-label">REPS</div><div class="gym-step-main"><button data-gym-action="reps-minus" data-id="${gEsc(ex.id)}">−</button><input id="gymReps-${gEsc(ex.id)}" type="number" inputmode="numeric" min="0" max="200" value="${gEsc(draft.reps)}"><button data-gym-action="reps-plus" data-id="${gEsc(ex.id)}">+</button></div><div class="gym-step-unit">objetivo ${ex.rep_min}${ex.rep_max!==ex.rep_min?`–${ex.rep_max}`:''}</div></div></div><div class="gym-entry-options"><button class="gym-warmup ${draft.warmup?'active':''}" data-gym-action="warmup" data-id="${gEsc(ex.id)}">Calentamiento</button><select class="gym-rpe" id="gymRpe-${gEsc(ex.id)}" aria-label="RPE"><option value="">RPE —</option>${[6,7,8,9,10].map(n=>`<option value="${n}" ${String(draft.rpe)===String(n)?'selected':''}>RPE ${n}</option>`).join('')}</select><button class="gym-log-set" data-gym-action="log-set" data-id="${gEsc(ex.id)}">Guardar serie</button></div></article>`;
 }
 
 function updateDraftFromInputs(id){
