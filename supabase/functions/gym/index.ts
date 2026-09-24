@@ -50,6 +50,12 @@ async function payload(){
     from public.gym_sessions s left join public.gym_sets gs on gs.session_id=s.id
     where s.finished_at is not null
     group by s.id order by s.started_at desc limit 24`;
+  const historyIds=history.map((s:any)=>s.id);
+  const historySets=historyIds.length?await sql`
+    select gs.id,gs.session_id,gs.exercise_id,gs.exercise_name_snapshot,gs.set_number,gs.weight_kg,gs.reps,gs.rpe,gs.is_warmup,gs.completed_at
+    from public.gym_sets gs
+    where gs.session_id in ${sql(historyIds)}
+    order by gs.session_id,gs.completed_at,gs.set_number`:[];
   const recentSets=await sql`
     select distinct on (gs.exercise_id) gs.exercise_id,gs.exercise_name_snapshot,gs.weight_kg,gs.reps,gs.rpe,gs.completed_at
     from public.gym_sets gs join public.gym_sessions s on s.id=gs.session_id
@@ -66,7 +72,7 @@ async function payload(){
       count(*) filter(where finished_at is not null and started_at>=date_trunc('month',now()))::int as sessions_month,
       count(*) filter(where finished_at is not null and started_at>=now()-interval '30 days')::int as sessions_30d
     from public.gym_sessions`;
-  return {routine,days,exercises,activeSession,activeSets,history,recentSets,bests,body,schedule,stats:statsRows[0]||{sessions_month:0,sessions_30d:0}};
+  return {routine,days,exercises,activeSession,activeSets,history,historySets,recentSets,bests,body,schedule,stats:statsRows[0]||{sessions_month:0,sessions_30d:0}};
 }
 
 Deno.serve(async(req:Request)=>{
