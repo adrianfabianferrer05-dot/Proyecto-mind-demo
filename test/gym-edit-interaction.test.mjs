@@ -34,7 +34,7 @@ test('el sheet del Gym vive en el viewport y no dentro de la vista animada de iO
 });
 
 test('la PWA fuerza una cache nueva e incluye todos los ficheros del editor',()=>{
-  assert.match(sw,/const CACHE='segunda-mente-v37'/);
+  assert.match(sw,/const CACHE='segunda-mente-v38'/);
   for(const asset of ['gym-enhance.js?v=1','gym-routine-editor.js?v=1','gym-routine-editor.css?v=1'])
     assert.ok(sw.includes(asset),asset);
 });
