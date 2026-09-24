@@ -6,6 +6,7 @@ const read = (f) => readFileSync(new URL(`../${f}`, import.meta.url), 'utf8');
 const today = read('today.js');
 const css = read('today.css');
 const migration = read('supabase/migrations/20260924043000_weekday_routine_morning_and_afternoon.sql');
+const exactTimes = read('supabase/migrations/20260924044500_weekday_routine_exact_times.sql');
 
 test('Hoy muestra la rutina estructurada completa y no depende de la nota reciente', () => {
   assert.match(today, /routine_profile === 'weekday_v1'/);
@@ -31,4 +32,13 @@ test('el cron sustituye al aviso antiguo y deduplica cada momento por día', () 
   assert.match(migration, /'segunda-mente-weekday-routine'/);
   assert.match(migration, /q\.title = p\.push_title/);
   assert.match(migration, /scheduled_at at time zone p\.tz/);
+});
+
+test('las horas explícitas de la rutina no se desplazan por silencio nocturno', () => {
+  assert.match(exactTimes, /private\.enqueue_weekday_routine/);
+  assert.match(exactTimes, /morning_time.*time '06:00'/s);
+  assert.match(exactTimes, /afternoon_time.*time '15:20'/s);
+  assert.match(exactTimes, /if inserted_status = 'queued'/);
+  assert.match(exactTimes, /set scheduled_at = exact_at/);
+  assert.match(exactTimes, /select private\.enqueue_weekday_routine\(\);/);
 });
