@@ -50,3 +50,14 @@ test('lo que no es un ejercicio no se clasifica', () => {
   for (const n of ['Movilidad de cadera con banda', 'Estiramientos', '', 'asdfgh'])
     assert.equal(muscleMix(n), null, `"${n}" no deberia mapear a ningun grupo`);
 });
+
+
+test('el gym conserva historial detallado y referencia anterior', () => {
+  const gym = readFileSync(new URL('../gym.js', import.meta.url), 'utf8');
+  const api = readFileSync(new URL('../supabase/functions/gym/index.ts', import.meta.url), 'utf8');
+  assert.match(api, /historySets/);
+  assert.match(gym, /previousSetsForExercise/);
+  assert.match(gym, /ANTERIOR/);
+  assert.match(gym, /gym-history-detail/);
+  assert.match(gym, /reps/);
+});
